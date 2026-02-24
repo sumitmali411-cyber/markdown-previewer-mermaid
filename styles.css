@@ -66,3 +66,18 @@ pre {
     padding: 10px;
     overflow-x: auto;
 }
+
+.mermaid-diagram {
+    margin: 12px 0;
+    overflow-x: auto;
+}
+
+.mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.mermaid-error {
+    color: #b00020;
+    background: #fff2f2;
+}
