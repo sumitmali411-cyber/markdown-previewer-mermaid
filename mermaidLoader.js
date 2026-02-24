@@ -38,7 +38,13 @@ export async function loadMermaid(version = "latest") {
                 return;
             }
 
-            window.mermaid.initialize({ startOnLoad: false });
+            window.mermaid.initialize({
+                startOnLoad: false,
+                flowchart: {
+                    htmlLabels: false,
+                    useMaxWidth: true
+                }
+            });
             resolve(window.mermaid);
         };
 

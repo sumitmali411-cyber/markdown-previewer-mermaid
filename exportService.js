@@ -4,18 +4,65 @@ function nextPaint() {
     });
 }
 
-async function waitForImages(root) {
-    const images = Array.from(root.querySelectorAll("img"));
-    const pending = images
-        .filter(img => !img.complete)
-        .map(img => new Promise(resolve => {
+async function waitForImage(img) {
+    if (!img) return;
+
+    if (!img.complete) {
+        await new Promise(resolve => {
             img.addEventListener("load", resolve, { once: true });
             img.addEventListener("error", resolve, { once: true });
-        }));
-
-    if (pending.length > 0) {
-        await Promise.all(pending);
+        });
     }
+
+    if (img.naturalWidth > 0 && img.naturalHeight > 0 && typeof img.decode === "function") {
+        try {
+            await img.decode();
+        } catch {
+            // decode() can reject for already-decoded resources in some browsers.
+        }
+    }
+}
+
+async function waitForImages(root) {
+    const images = Array.from(root.querySelectorAll("img"));
+    await Promise.all(images.map(img => waitForImage(img)));
+}
+
+function loadImageFromSource(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = async () => {
+            if (typeof img.decode === "function") {
+                try {
+                    await img.decode();
+                } catch {
+                    // Ignore decode race conditions after onload.
+                }
+            }
+            resolve(img);
+        };
+        img.onerror = () => {
+            reject(new Error("Failed to load generated SVG image."));
+        };
+        img.src = src;
+    });
+}
+
+async function rasterizeSvgToPngDataUri(svgNode, size) {
+    const svgUri = buildSvgDataUri(svgNode);
+    const sourceImg = await loadImageFromSource(svgUri);
+    const canvas = document.createElement("canvas");
+    canvas.width = size.width;
+    canvas.height = size.height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        throw new Error("Canvas context is unavailable while rasterizing SVG.");
+    }
+
+    ctx.drawImage(sourceImg, 0, 0, size.width, size.height);
+    return canvas.toDataURL("image/png", 1);
 }
 
 function computeSafeScale(width, height) {
@@ -49,6 +96,9 @@ function buildSvgDataUri(svgNode) {
 
     if (!svgText.includes("xmlns=")) {
         svgText = svgText.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if (!svgText.includes("xmlns:xlink=")) {
+        svgText = svgText.replace("<svg", '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
     }
 
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
@@ -96,7 +146,7 @@ function inferSvgSize(svg, fallbackWidth = 760, fallbackHeight = 240) {
     };
 }
 
-function replaceSvgsWithImages(sourceRoot, targetRoot, fallbackWidth = 760) {
+async function replaceSvgsWithImages(sourceRoot, targetRoot, fallbackWidth = 760) {
     const sourceSvgs = Array.from(sourceRoot.querySelectorAll("svg"));
     const targetSvgs = Array.from(targetRoot.querySelectorAll("svg"));
     const count = Math.min(sourceSvgs.length, targetSvgs.length);
@@ -108,7 +158,6 @@ function replaceSvgsWithImages(sourceRoot, targetRoot, fallbackWidth = 760) {
 
         const img = document.createElement("img");
         img.alt = "diagram";
-        img.src = buildSvgDataUri(sourceSvg);
         img.width = size.width;
         img.height = size.height;
         img.style.width = `${size.width}px`;
@@ -116,7 +165,14 @@ function replaceSvgsWithImages(sourceRoot, targetRoot, fallbackWidth = 760) {
         img.style.maxWidth = "100%";
         img.style.display = "block";
 
+        try {
+            img.src = await rasterizeSvgToPngDataUri(sourceSvg, size);
+        } catch {
+            img.src = buildSvgDataUri(sourceSvg);
+        }
+
         targetSvg.replaceWith(img);
+        await waitForImage(img);
     }
 }
 
@@ -209,6 +265,7 @@ async function exportViaPrintDialog(element) {
     const bgVar = bodyStyles.getPropertyValue("--bg").trim() || bodyStyles.backgroundColor || "#ffffff";
     const textVar = bodyStyles.getPropertyValue("--text").trim() || bodyStyles.color || "#111111";
     const clone = element.cloneNode(true);
+    await replaceSvgsWithImages(element, clone, 746);
     const styles = extractHeadStyles();
 
     printDoc.open();
@@ -326,7 +383,7 @@ export async function exportPDF(element) {
     snapshot.style.minHeight = "1px";
     snapshot.style.transform = "translateY(0)";
     snapshot.style.transformOrigin = "top left";
-    replaceSvgsWithImages(element, snapshot, 746);
+    await replaceSvgsWithImages(element, snapshot, 746);
 
     document.body.appendChild(host);
 
