@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown + Mermaid Viewer</title>
+
+    <!-- Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+    <!-- PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+    <!-- DOCX -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="toolbar">
+    <div class="left-tools">
+        <input type="file" id="fileInput" accept=".md" hidden />
+        <button id="uploadBtn">Upload .md</button>
+        <select id="mermaidVersion">
+            <option value="10.8.0">Mermaid 10.8.0</option>
+            <option value="11.2.0">Mermaid 11.2.0</option>
+            <option value="11.3.0">Mermaid 11.3.0</option>
+            <option value="11.4.0">Mermaid 11.4.0</option>
+            <option value="latest" selected>Latest</option>
+        </select>
+        <button id="toggleRaw">Toggle Raw</button>
+    </div>
+    <div class="right-tools">
+        <button id="exportPDF">Export PDF</button>
+        <button id="exportDOCX">Export DOCX</button>
+        <button id="themeToggle">🌙</button>
+    </div>
+</header>
+
+<main class="container">
+    <div id="dropZone" class="preview-pane">
+        <div id="preview"></div>
+    </div>
+    <textarea id="rawMarkdown" class="raw-pane hidden"></textarea>
+</main>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>

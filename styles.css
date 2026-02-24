@@ -1,0 +1,68 @@
+:root {
+    --bg: #ffffff;
+    --text: #222;
+    --toolbar: #f3f3f3;
+}
+
+[data-theme="dark"] {
+    --bg: #1e1e1e;
+    --text: #eee;
+    --toolbar: #2c2c2c;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: var(--toolbar);
+    border-bottom: 1px solid #ccc;
+}
+
+button, select {
+    margin-right: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 50px);
+}
+
+.preview-pane {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+}
+
+.raw-pane {
+    flex: 1;
+    padding: 20px;
+    border-left: 1px solid #ccc;
+}
+
+.hidden {
+    display: none;
+}
+
+#dropZone {
+    border: 2px dashed #bbb;
+}
+
+#dropZone.dragover {
+    background: #eef;
+}
+
+pre {
+    background: #272822;
+    color: #fff;
+    padding: 10px;
+    overflow-x: auto;
+}
