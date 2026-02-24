@@ -22,7 +22,7 @@ function computeSafeScale(width, height) {
     const maxCanvasDim = 16384;
     const scaleByWidth = maxCanvasDim / Math.max(width, 1);
     const scaleByHeight = maxCanvasDim / Math.max(height, 1);
-    const preferredScale = 3;
+    const preferredScale = 2.5;
     const safe = Math.min(preferredScale, scaleByWidth, scaleByHeight);
 
     if (!Number.isFinite(safe) || safe <= 0) {
@@ -178,6 +178,115 @@ function getHtml2PdfFunction() {
     return null;
 }
 
+function extractHeadStyles() {
+    return Array.from(document.querySelectorAll("style, link[rel='stylesheet']"))
+        .map(node => node.outerHTML)
+        .join("\n");
+}
+
+async function exportViaPrintDialog(element) {
+    const frame = document.createElement("iframe");
+    frame.style.position = "fixed";
+    frame.style.right = "0";
+    frame.style.bottom = "0";
+    frame.style.width = "0";
+    frame.style.height = "0";
+    frame.style.border = "0";
+    frame.style.opacity = "0";
+    frame.style.pointerEvents = "none";
+    frame.setAttribute("aria-hidden", "true");
+    document.body.appendChild(frame);
+
+    const printDoc = frame.contentDocument;
+    const printWin = frame.contentWindow;
+
+    if (!printDoc || !printWin) {
+        frame.remove();
+        throw new Error("Unable to create print context for PDF export.");
+    }
+
+    const bodyStyles = window.getComputedStyle(document.body);
+    const bgVar = bodyStyles.getPropertyValue("--bg").trim() || bodyStyles.backgroundColor || "#ffffff";
+    const textVar = bodyStyles.getPropertyValue("--text").trim() || bodyStyles.color || "#111111";
+    const clone = element.cloneNode(true);
+    const styles = extractHeadStyles();
+
+    printDoc.open();
+    printDoc.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>document</title>
+${styles}
+<style>
+    :root {
+        --bg: ${bgVar};
+        --text: ${textVar};
+    }
+    @page { size: A4; margin: 10mm; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+    }
+    #print-root {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 1px;
+        padding: 20px;
+        background: var(--bg);
+        color: var(--text);
+    }
+    #print-root img,
+    #print-root svg {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+</head>
+<body>
+    <div id="print-root"></div>
+</body>
+</html>`);
+    printDoc.close();
+
+    const printRoot = printDoc.getElementById("print-root");
+    if (!printRoot) {
+        frame.remove();
+        throw new Error("Unable to prepare print root.");
+    }
+
+    printRoot.appendChild(clone);
+
+    if (printDoc.fonts && printDoc.fonts.ready) {
+        await printDoc.fonts.ready;
+    }
+
+    await waitForImages(printRoot);
+    await new Promise(resolve => setTimeout(resolve, 80));
+
+    printWin.focus();
+    printWin.print();
+    setTimeout(() => frame.remove(), 1200);
+}
+
+function getAdaptiveScale(contentWidth, pageHeightPx, estimatedPages) {
+    const baseScale = computeSafeScale(contentWidth, pageHeightPx);
+
+    if (estimatedPages > 80) {
+        return Math.max(1, Math.min(baseScale, 1.2));
+    }
+    if (estimatedPages > 40) {
+        return Math.max(1, Math.min(baseScale, 1.4));
+    }
+    if (estimatedPages > 20) {
+        return Math.max(1, Math.min(baseScale, 1.8));
+    }
+
+    return baseScale;
+}
+
 export async function exportPDF(element) {
     if (!element || !element.innerHTML.trim()) {
         alert("Nothing to export. Load or type some markdown first.");
@@ -187,24 +296,27 @@ export async function exportPDF(element) {
     const snapshot = element.cloneNode(true);
     const host = document.createElement("div");
     const viewport = document.createElement("div");
+    const bodyStyles = getComputedStyle(document.body);
+    const bgColor = bodyStyles.getPropertyValue("--bg").trim() || bodyStyles.backgroundColor || "#ffffff";
+    const textColor = bodyStyles.getPropertyValue("--text").trim() || bodyStyles.color || "#111111";
 
     host.style.position = "fixed";
     host.style.left = "0";
     host.style.top = "0";
-    host.style.opacity = "1";
+    host.style.opacity = "0";
     host.style.pointerEvents = "none";
     host.style.zIndex = "-1";
-    host.style.width = "794px";
-    host.style.padding = "24px";
+    host.style.width = `${Math.max(420, Math.round(element.clientWidth || 746))}px`;
+    host.style.padding = "20px";
     host.style.boxSizing = "border-box";
-    host.style.background = "#ffffff";
-    host.style.color = "#111111";
-    host.style.setProperty("--bg", "#ffffff");
-    host.style.setProperty("--text", "#111111");
+    host.style.background = bgColor;
+    host.style.color = textColor;
+    host.style.setProperty("--bg", bgColor);
+    host.style.setProperty("--text", textColor);
 
     viewport.style.width = "100%";
     viewport.style.overflow = "hidden";
-    viewport.style.background = "#ffffff";
+    viewport.style.background = bgColor;
     viewport.style.minHeight = "1px";
     viewport.appendChild(snapshot);
     host.appendChild(viewport);
@@ -250,7 +362,7 @@ export async function exportPDF(element) {
                     html2canvas: {
                         scale: fallbackScale,
                         useCORS: true,
-                        backgroundColor: "#ffffff",
+                        backgroundColor: bgColor,
                         scrollX: 0,
                         scrollY: 0,
                         windowWidth: fallbackWidth,
@@ -282,18 +394,37 @@ export async function exportPDF(element) {
         const renderWidthMm = pageWidthMm - marginMm * 2;
         const renderHeightMm = pageHeightMm - marginMm * 2;
         const pageHeightPx = Math.max(1, Math.floor((renderHeightMm * contentWidth) / renderWidthMm));
+        const estimatedPages = Math.max(1, Math.ceil(contentHeight / pageHeightPx));
 
-        const scale = computeSafeScale(contentWidth, pageHeightPx);
+        if (estimatedPages > 120) {
+            await exportViaPrintDialog(element);
+            return;
+        }
+
+        const scale = getAdaptiveScale(contentWidth, pageHeightPx, estimatedPages);
+        const useJpeg = estimatedPages > 22;
+        const imageFormat = useJpeg ? "JPEG" : "PNG";
+        const imageMime = useJpeg ? "image/jpeg" : "image/png";
+        const imageQuality = useJpeg ? 0.92 : 1;
+        const compression = useJpeg ? "MEDIUM" : "FAST";
         let offsetY = 0;
         let pageIndex = 0;
+        let guard = 0;
+        const maxPages = Math.min(estimatedPages + 6, 140);
 
         while (offsetY < contentHeight) {
-            const sliceHeight = Math.min(pageHeightPx, contentHeight - offsetY);
+            guard += 1;
+            if (guard > maxPages) {
+                throw new Error("Pagination stalled while exporting PDF.");
+            }
+
+            const remaining = contentHeight - offsetY;
+            const sliceHeight = Math.max(1, Math.min(pageHeightPx, remaining));
 
             const canvas = await html2canvasFn(snapshot, {
                 scale,
                 useCORS: true,
-                backgroundColor: "#ffffff",
+                backgroundColor: bgColor,
                 scrollX: 0,
                 scrollY: 0,
                 windowWidth: contentWidth,
@@ -308,7 +439,7 @@ export async function exportPDF(element) {
                 throw new Error(`Canvas capture failed (${canvas?.width || 0}x${canvas?.height || 0}) at offset ${offsetY}.`);
             }
 
-            const imageData = canvas.toDataURL("image/png");
+            const imageData = canvas.toDataURL(imageMime, imageQuality);
             const imageHeightMm = (sliceHeight * renderWidthMm) / contentWidth;
 
             if (pageIndex > 0) {
@@ -317,40 +448,83 @@ export async function exportPDF(element) {
 
             pdf.addImage(
                 imageData,
-                "PNG",
+                imageFormat,
                 marginMm,
                 marginMm,
                 renderWidthMm,
-                imageHeightMm
+                imageHeightMm,
+                undefined,
+                compression
             );
 
-            offsetY += sliceHeight;
+            const nextOffset = offsetY + sliceHeight;
+            if (!Number.isFinite(nextOffset) || nextOffset <= offsetY) {
+                throw new Error(`Pagination failed to advance at offset ${offsetY}.`);
+            }
+
+            offsetY = nextOffset;
             pageIndex += 1;
         }
 
-        pdf.save("document.pdf");
+        try {
+            pdf.save("document.pdf");
+        } catch (error) {
+            const message = String(error?.message || error || "");
+            if (error instanceof RangeError || /invalid string length/i.test(message)) {
+                await exportViaPrintDialog(element);
+                return;
+            }
+            throw error;
+        }
     } finally {
         host.remove();
     }
 }
 
 export async function exportDOCX(element) {
-    const { Document, Packer, Paragraph, TextRun } = window.docx;
+    if (!window.docx) {
+        throw new Error("DOCX export library is unavailable.");
+    }
 
-    const doc = new Document();
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
     const paragraphs = [];
 
     element.querySelectorAll("h1,h2,h3,p,li").forEach(node => {
-        paragraphs.push(new Paragraph({
-            children: [new TextRun(node.innerText)]
-        }));
+        const text = String(node.innerText || "").trim();
+        if (!text) {
+            return;
+        }
+
+        const tag = node.tagName.toLowerCase();
+        const paragraphConfig = {
+            children: [new TextRun(text)]
+        };
+
+        if (tag === "h1" && HeadingLevel?.HEADING_1) {
+            paragraphConfig.heading = HeadingLevel.HEADING_1;
+        } else if (tag === "h2" && HeadingLevel?.HEADING_2) {
+            paragraphConfig.heading = HeadingLevel.HEADING_2;
+        } else if (tag === "h3" && HeadingLevel?.HEADING_3) {
+            paragraphConfig.heading = HeadingLevel.HEADING_3;
+        }
+
+        paragraphs.push(new Paragraph(paragraphConfig));
     });
 
-    doc.addSection({ children: paragraphs });
+    const doc = new Document({
+        creator: "Markdown Previewer",
+        title: "document",
+        description: "Exported from markdown preview",
+        sections: [{
+            properties: {},
+            children: paragraphs.length > 0 ? paragraphs : [new Paragraph({ children: [new TextRun("")] })]
+        }]
+    });
 
     const blob = await Packer.toBlob(doc);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "document.docx";
     link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
