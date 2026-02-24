@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <!-- PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
     <!-- DOCX -->
@@ -37,7 +39,7 @@
     <div class="right-tools">
         <button id="exportPDF">Export PDF</button>
         <button id="exportDOCX">Export DOCX</button>
-        <button id="themeToggle">🌙</button>
+        <button id="themeToggle">Theme</button>
     </div>
 </header>
 
@@ -47,6 +49,11 @@
     </div>
     <textarea id="rawMarkdown" class="raw-pane hidden"></textarea>
 </main>
+
+<div id="processingIndicator" class="processing-indicator hidden" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
+    <span class="spinner" aria-hidden="true"></span>
+    <span id="processingText">Processing...</span>
+</div>
 
 <script type="module" src="app.js"></script>
 
