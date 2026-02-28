@@ -1,4 +1,5 @@
 import { loadMermaid, renderMermaid } from "./mermaidLoader.js";
+import { exportPDF, exportDOCX } from "./exportService.js";
 
 const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
@@ -8,6 +9,8 @@ const toggleRaw = document.getElementById("toggleRaw");
 const versionSelect = document.getElementById("mermaidVersion");
 const dropZone = document.getElementById("dropZone");
 const themeToggle = document.getElementById("themeToggle");
+const exportPdfBtn = document.getElementById("exportPdfBtn");
+const exportDocxBtn = document.getElementById("exportDocxBtn");
 const processingIndicator = document.getElementById("processingIndicator");
 const processingText = document.getElementById("processingText");
 
@@ -219,6 +222,24 @@ versionSelect.onchange = async () => {
 themeToggle.onclick = () => {
     const theme = document.body.getAttribute("data-theme");
     document.body.setAttribute("data-theme", theme === "dark" ? "light" : "dark");
+};
+
+exportPdfBtn.onclick = async () => {
+    try {
+        await withProcessing("Exporting PDF...", () => exportPDF(preview), { control: exportPdfBtn, controlLabel: "Exporting..." });
+    } catch (error) {
+        console.error(error);
+        alert(`PDF export failed: ${error.message || error}`);
+    }
+};
+
+exportDocxBtn.onclick = async () => {
+    try {
+        await withProcessing("Exporting DOCX...", () => exportDOCX(preview), { control: exportDocxBtn, controlLabel: "Exporting..." });
+    } catch (error) {
+        console.error(error);
+        alert(`DOCX export failed: ${error.message || error}`);
+    }
 };
 
 (async () => {

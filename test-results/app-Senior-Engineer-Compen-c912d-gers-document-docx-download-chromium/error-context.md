@@ -1,0 +1,2260 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - button "Upload .md" [ref=e4] [cursor=pointer]
+      - combobox [ref=e5] [cursor=pointer]:
+        - option "Mermaid 10.8.0"
+        - option "Mermaid 11.2.0"
+        - option "Mermaid 11.3.0"
+        - option "Mermaid 11.4.0"
+        - option "Latest" [selected]
+      - button "Toggle Raw" [ref=e6] [cursor=pointer]
+      - button "Export PDF" [ref=e7] [cursor=pointer]
+      - button "Export DOCX" [ref=e8] [cursor=pointer]
+    - button "Theme" [ref=e10] [cursor=pointer]
+  - main [ref=e11]:
+    - generic [ref=e13]:
+      - heading "Senior Engineer's Complete Compendium" [level=1] [ref=e14]
+      - blockquote [ref=e15]:
+        - paragraph [ref=e16]:
+          - strong [ref=e17]: Three domains. Every concept. Explained from first principles — with Mermaid diagrams you can render anywhere.
+      - paragraph [ref=e18]:
+        - text: Paste any diagram block into
+        - link "mermaid.live" [ref=e19] [cursor=pointer]:
+          - /url: https://mermaid.live
+        - text: for an interactive render. Mermaid is also natively supported in GitHub markdown, GitLab, Notion, Confluence, and VS Code (Mermaid Preview extension).
+      - separator [ref=e20]
+      - heading "Table of Contents" [level=2] [ref=e21]
+      - paragraph [ref=e22]:
+        - strong [ref=e23]: Part 1 — Java and JVM Internals
+        - text: Java Memory Model · Happens-Before · Volatile · Instruction Reordering · Escape Analysis · False Sharing · CAS · ABA Problem · AQS · ForkJoinPool · Virtual Threads · Semaphores · GC Roots · G1 GC · Object Header Layout · Type Erasure · Bridge Methods · Double-Checked Locking · readResolve · SerialVersionUID · StampedLock · NIO Selector · DirectByteBuffer · ClassLoader · JIT Inlining · Deoptimisation · @Transactional Proxy · CGLIB · MethodHandles · VarHandle · TLAB · Sealed Classes · Lock Inflation · Write Barriers · DispatcherServlet · Stream Short-Circuiting · Spliterator · Try-With-Resources
+      - paragraph [ref=e24]:
+        - strong [ref=e25]: Part 2 — Databases and Distributed Systems
+        - text: Indexing · Clustering · Normalisation · Read Replicas · Replication Modes · Quorum · Consensus · CAP Theorem · BASE vs ACID · MVCC · Snapshot Isolation · 2PC and 3PC · WAL · Checkpointing · Compaction · Bloom Filter · LSM Tree vs B-Tree · Query Planner · Deadlock · Lock Types · Isolation Anomalies · Backpressure · Circuit Breaker · Rate Limiting · CDC · Consistent Hashing · Partitioning · Idempotency · Exactly-Once Semantics
+      - paragraph [ref=e26]:
+        - strong [ref=e27]: Part 3 — Frontend Engineering
+        - text: Hydration · Islands Architecture · Streaming SSR · Concurrent Rendering · Fiber Architecture · Reconciliation · Virtual DOM · Structural Sharing · Memoization · Stale Closures · Event Loop · Layout Thrashing · Critical Rendering Path · Tree Shaking · Code Splitting · Web Workers vs Service Workers · SharedArrayBuffer · Browser Compositing · GPU Acceleration · Service Worker Lifecycle · Cache Strategies · CORS · CSP · Suspense · Selective Hydration · Server Components · Web Vitals · CRDTs · AbortController · Memory Leaks · Accessibility Tree · ARIA Live Regions
+      - separator [ref=e28]
+      - heading "☕ Part 1 — Java and JVM Internals" [level=1] [ref=e29]
+      - separator [ref=e30]
+      - heading "Java Memory Model (JMM)" [level=2] [ref=e31]
+      - paragraph [ref=e32]:
+        - text: The JMM is the contract between your Java program and the hardware beneath it. Modern CPUs keep per-core caches, so two threads can simultaneously hold different values for the same variable — and both are technically "correct" from their cache's perspective. The JMM doesn't describe hardware behaviour; it defines what the language
+        - strong [ref=e33]: guarantees
+        - text: "when you use synchronisation primitives correctly. Without it, the runtime is free to let a thread read from its stale cache forever. Think of it as the rules of a postal system: threads are cities, and the JMM defines when a letter (a write) is guaranteed to arrive at another city (another thread)."
+      - document [ref=e35]:
+        - generic [ref=e37]:
+          - generic [ref=e42]:
+            - generic [ref=e48]: "YES"
+            - generic [ref=e54]: "NO"
+          - generic [ref=e55]:
+            - paragraph [ref=e62]: Thread 1 writes x=1
+            - paragraph [ref=e69]: Uses volatile or sync?
+            - paragraph [ref=e76]: Flush to Main Memory
+            - paragraph [ref=e83]: May stay in CPU Cache
+            - paragraph [ref=e90]: Main Memory updated
+            - paragraph [ref=e97]: Thread 2 reads x=1 GUARANTEED
+            - paragraph [ref=e104]: Thread 2 may read x=0 STALE
+            - paragraph [ref=e111]: "NOTE: Without JMM guarantees\\neach core cache is independent"
+      - separator [ref=e112]
+      - heading "Happens-Before Relationship" [level=2] [ref=e113]
+      - paragraph [ref=e114]:
+        - text: Happens-before is the formal visibility guarantee mechanism inside the JMM. If action A happens-before action B, everything A wrote is
+        - strong [ref=e115]: guaranteed visible
+        - text: "to B. This is not about physical time — it is about visibility promises. Key rules: an unlock of a monitor happens-before every subsequent lock of that same monitor; a"
+        - code [ref=e116]: volatile
+        - text: write happens-before every subsequent read of the same field;
+        - code [ref=e117]: thread.start()
+        - text: "happens-before any action in the started thread. The relationship is transitive: if A hb B and B hb C, then A hb C. If no happens-before edge exists between your write and someone else's read, the JVM makes no visibility promise at all."
+      - document [ref=e119]:
+        - generic [ref=e125]:
+          - paragraph [ref=e132]: "Thread A: volatile write x=42"
+          - paragraph [ref=e139]: Main Memory flush
+          - paragraph [ref=e146]: "Thread B: volatile read x"
+          - paragraph [ref=e153]: Sees 42 GUARANTEED
+          - paragraph [ref=e160]: "Thread A: unlock monitor"
+          - paragraph [ref=e167]: "Thread B: lock same monitor"
+          - paragraph [ref=e174]: All of A's writes visible
+          - paragraph [ref=e181]: "Thread A: thread.start"
+          - paragraph [ref=e188]: "Thread B: any action"
+          - paragraph [ref=e195]: Sees all pre-start writes
+          - paragraph [ref=e202]: "NOTE: Transitivity applies\\nA hb B and B hb C means A hb C"
+      - separator [ref=e203]
+      - heading "Volatile Visibility Guarantees" [level=2] [ref=e204]
+      - paragraph [ref=e205]:
+        - text: Declaring a field
+        - code [ref=e206]: volatile
+        - text: "gives two guarantees:"
+        - strong [ref=e207]: visibility
+        - text: and
+        - strong [ref=e208]: ordering
+        - text: ", but not compound atomicity. On write, the value is immediately flushed to main memory. On read, the value is always fetched from main memory — never from a thread-local cache. This eliminates stale reads. The ordering guarantee acts as a memory fence: all writes before the volatile write are visible to any thread that subsequently reads the volatile field. What volatile"
+        - emphasis [ref=e209]: cannot
+        - text: do is protect compound operations. A volatile
+        - code [ref=e210]: counter++
+        - text: is still three steps — read, increment, write — and two threads can interleave them, losing an update. For that you need
+        - code [ref=e211]: AtomicInteger
+        - text: or synchronisation.
+      - document [ref=e213]:
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e222]: Read Side
+            - generic [ref=e228]: Write Side
+          - generic [ref=e232]:
+            - paragraph [ref=e239]: prior writes to A, B, C
+            - paragraph [ref=e246]: volatile write to flag=true
+            - paragraph [ref=e253]: flush A, B, C, flag to Main Memory
+            - paragraph [ref=e260]: volatile read of flag
+            - paragraph [ref=e267]: refresh A, B, C from Main Memory
+            - paragraph [ref=e274]: safely read A, B, C
+            - paragraph [ref=e281]: "NOTE: volatile does NOT protect\\ncompound operations like counter++"
+      - separator [ref=e282]
+      - heading "Instruction Reordering" [level=2] [ref=e283]
+      - paragraph [ref=e284]: "Both the compiler and the CPU are free to reorder instructions as long as the result appears correct from a single-threaded perspective. For a single thread this is safe; in a multi-threaded world it is catastrophic. Three sources exist: compiler reordering (the JIT moves instructions for better register use), CPU out-of-order execution (the chip executes instructions in whatever sequence maximises throughput), and memory system reordering (store buffers make writes visible to other cores out of order). The JMM defines exactly which reorderings are permitted and which are forbidden across synchronisation boundaries, giving you predictable behaviour when you use the correct primitives."
+      - document [ref=e286]:
+        - generic [ref=e288]:
+          - generic [ref=e295]: What CPU may actually do
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - generic [ref=e307]: Compiler reorders
+              - generic [ref=e308]:
+                - paragraph [ref=e315]: a=1
+                - paragraph [ref=e322]: flag=true
+                - paragraph [ref=e329]: b=2
+            - generic [ref=e330]:
+              - generic [ref=e337]: Your source code order
+              - generic [ref=e338]:
+                - paragraph [ref=e345]: a = 1
+                - paragraph [ref=e352]: b = 2
+                - paragraph [ref=e359]: flag = true
+            - paragraph [ref=e366]: b = 2
+            - paragraph [ref=e373]: flag = true
+            - paragraph [ref=e380]: a = 1
+            - paragraph [ref=e387]: "NOTE: volatile write/read\\nacts as a reorder fence"
+      - separator [ref=e388]
+      - heading "Escape Analysis" [level=2] [ref=e389]
+      - paragraph [ref=e390]:
+        - text: "Escape analysis is a JIT optimisation that asks: does this object's reference ever leave the current method or thread? If it does not escape, the JVM can allocate it on the thread's stack instead of the heap — stack allocation is essentially free and requires no garbage collection. Even better, the JIT can"
+        - emphasis [ref=e391]: scalar-replace
+        - text: "the object: decompose it into its individual fields, stored in CPU registers, and never create an object at all. This is why creating small, short-lived objects in Java is often cheaper than developers expect. The practical lesson is to let the JIT do its job rather than pre-optimising by avoiding object creation."
+      - document [ref=e393]:
+        - generic [ref=e395]:
+          - generic [ref=e401]:
+            - generic [ref=e407]: does NOT escape
+            - generic [ref=e412]:
+              - generic [ref=e413]: escapes to field\nor
+              - generic [ref=e414]: another thread
+          - generic [ref=e415]:
+            - paragraph [ref=e422]: new Point x=3 y=4 created in method
+            - paragraph [ref=e429]: Escape Analysis
+            - paragraph [ref=e436]: Allocate on Stack\nor Scalar Replace in registers
+            - paragraph [ref=e443]: Allocate on Heap\nGC managed
+            - paragraph [ref=e450]: "Method returns: stack frame popped\\nzero GC cost"
+            - paragraph [ref=e457]: GC tracks and collects later
+            - paragraph [ref=e464]: "NOTE: lambda bodies and\\nstream pipelines benefit greatly\\nfrom this optimisation"
+      - separator [ref=e465]
+      - heading "False Sharing" [level=2] [ref=e466]
+      - paragraph [ref=e467]:
+        - text: CPUs load memory in cache lines, typically
+        - strong [ref=e468]: 64 bytes
+        - text: at a time. False sharing occurs when two threads write to logically independent variables that happen to reside in the same 64-byte cache line. Even though the variables are unrelated, the CPU cache coherency protocol treats them as a single shared unit. Every write by one core invalidates the cache line on all other cores, forcing a re-fetch. The result is that two supposedly independent counters can run slower than a single contended counter. Padding — placing enough dummy bytes between hot fields — fixes this. Java provides the
+        - code [ref=e469]: "@Contended"
+        - text: annotation inside
+        - code [ref=e470]: sun.misc
+        - text: to automate the padding.
+      - document [ref=e472]:
+        - generic [ref=e478]:
+          - generic [ref=e479]:
+            - generic [ref=e486]: Single 64-byte Cache Line
+            - generic [ref=e487]:
+              - paragraph [ref=e494]: counter_A bytes 0-7
+              - paragraph [ref=e501]: counter_B bytes 8-15
+              - paragraph [ref=e508]: padding bytes 16-63
+          - paragraph [ref=e515]: Thread 1 writes counter_A
+          - paragraph [ref=e522]: Invalidates ENTIRE cache line\non Core 2
+          - paragraph [ref=e529]: Thread 2 writes counter_B
+          - paragraph [ref=e536]: Invalidates ENTIRE cache line\non Core 1
+          - paragraph [ref=e543]: Both cores stall waiting\nfor coherency SLOW
+          - paragraph [ref=e550]: "Fix: pad counter_A and counter_B\\nto separate cache lines via @Contended"
+          - paragraph [ref=e557]: "NOTE: adding more CPUs can\\nmake things SLOWER due to false sharing"
+      - separator [ref=e558]
+      - heading "CAS — Compare-And-Swap" [level=2] [ref=e559]
+      - paragraph [ref=e560]:
+        - text: "CAS is a hardware atomic instruction: if the value at this memory address equals the expected value, replace it with the new value — atomically. It returns whether the swap succeeded. This single instruction is the foundation of all lock-free programming in Java."
+        - code [ref=e561]: AtomicInteger.incrementAndGet()
+        - text: "works as a CAS loop: read current value, compute new value, attempt CAS. If another thread changed the value in between, CAS fails and the loop retries. No locks, no context switches, no blocking. Under low contention this is extremely fast. Under high contention the spinning burns CPU — which is why"
+        - code [ref=e562]: LongAdder
+        - text: shards counters across cells and aggregates only on read.
+      - document [ref=e564]:
+        - generic [ref=e566]:
+          - generic [ref=e572]:
+            - generic [ref=e578]: success
+            - generic [ref=e583]:
+              - generic [ref=e584]: "fail: another thread"
+              - generic [ref=e585]: changed it
+          - generic [ref=e586]:
+            - generic [ref=e587]:
+              - generic [ref=e594]: Hardware Guarantee
+              - paragraph [ref=e602]: Read-Compare-Write is ONE\nindivisible CPU instruction
+            - paragraph [ref=e609]: Thread reads value V from memory
+            - paragraph [ref=e616]: Computes new value V_new
+            - paragraph [ref=e623]: "CAS: if mem still equals V\\nthen set to V_new"
+            - paragraph [ref=e630]: Update committed atomically
+            - paragraph [ref=e637]: "NOTE: LongAdder uses cell sharding\\nto reduce CAS contention at high write rates"
+      - separator [ref=e638]
+      - heading "ABA Problem" [level=2] [ref=e639]
+      - paragraph [ref=e640]:
+        - text: "The ABA problem is a subtle flaw in CAS-based algorithms. Thread 1 reads value A. It is preempted. Thread 2 changes A to B, then back to A. Thread 1 resumes and its CAS succeeds — the memory still reads A. But the object at that address may have been freed and reallocated, or the data structure may have changed, even though the pointer looks the same. The canonical example is a lock-free stack: if nodes are recycled from a pool, the top pointer can return to a previously seen address while the stack's interior is completely different. The fix is"
+        - code [ref=e641]: AtomicStampedReference
+        - text: — every CAS also checks a version stamp that increments on every update.
+      - document [ref=e643]:
+        - generic [ref=e646]: Thread 2
+        - generic [ref=e649]: Memory
+        - generic [ref=e652]: Thread 1
+        - generic [ref=e656]: Thread 2
+        - generic [ref=e660]: Memory
+        - generic [ref=e664]: Thread 1
+        - generic [ref=e667]: T1 preempted
+        - generic [ref=e670]: top = Node_A again
+        - generic [ref=e673]: CAS SUCCEEDS but stack is corrupt
+        - generic [ref=e676]: "Fix: AtomicStampedReference\\nchecks value AND version stamp"
+        - generic [ref=e677]: reads top = Node_A
+        - generic [ref=e678]: pop Node_A (top = Node_B)
+        - generic [ref=e679]: pop Node_B (top = null)
+        - generic [ref=e680]: push Node_A back (from pool)
+        - generic [ref=e681]: CAS if top == Node_A set to Node_A.next
+      - separator [ref=e682]
+      - heading "AQS — AbstractQueuedSynchronizer Internals" [level=2] [ref=e683]
+      - paragraph [ref=e684]:
+        - text: AQS is the backbone of Java's concurrency toolkit.
+        - code [ref=e685]: ReentrantLock
+        - text: ","
+        - code [ref=e686]: Semaphore
+        - text: ","
+        - code [ref=e687]: CountDownLatch
+        - text: ", and"
+        - code [ref=e688]: ReadWriteLock
+        - text: "all build on it. It provides two things: an integer"
+        - code [ref=e689]: state
+        - text: field and a FIFO queue of waiting threads. The meaning of state is defined by the subclass — for
+        - code [ref=e690]: ReentrantLock
+        - text: ", 0 means unlocked and positive values count reentrancy; for"
+        - code [ref=e691]: Semaphore
+        - text: ", state is the permit count. AQS gives you CAS on state and you override"
+        - code [ref=e692]: tryAcquire
+        - text: and
+        - code [ref=e693]: tryRelease
+        - text: . When a thread cannot acquire, AQS parks it using
+        - code [ref=e694]: LockSupport.park()
+        - text: and enqueues a node in a CLH-variant linked list. Release unparks the head of the queue. Fair vs unfair modes differ only in whether a new thread can barge in ahead of the queue.
+      - document [ref=e696]:
+        - generic [ref=e698]:
+          - generic [ref=e704]:
+            - generic [ref=e710]: success
+            - generic [ref=e716]: fail
+          - generic [ref=e717]:
+            - generic [ref=e718]:
+              - generic [ref=e725]: AQS Core
+              - generic [ref=e726]:
+                - paragraph [ref=e733]: int state\neg 0=unlocked 1=locked
+                - paragraph [ref=e740]: "CLH wait queue\\nNode: thread + waitStatus + prev + next"
+            - paragraph [ref=e747]: Thread calls lock
+            - paragraph [ref=e754]: tryAcquire\ncustom CAS on state
+            - paragraph [ref=e761]: Thread holds lock
+            - paragraph [ref=e768]: Enqueue node in CLH queue
+            - paragraph [ref=e775]: LockSupport.park thread suspends
+            - paragraph [ref=e782]: Releasing thread calls unlock
+            - paragraph [ref=e789]: tryRelease update state
+            - paragraph [ref=e796]: LockSupport.unpark head of queue
+            - paragraph [ref=e803]: Woken thread retries tryAcquire
+            - paragraph [ref=e810]: "NOTE: Fair mode strictly dequeues in order\\nUnfair mode lets new threads barge in for higher throughput"
+      - separator [ref=e811]
+      - heading "ForkJoinPool" [level=2] [ref=e812]
+      - paragraph [ref=e813]:
+        - text: ForkJoinPool is designed for recursive divide-and-conquer parallelism. Its core innovation is
+        - strong [ref=e814]: work stealing
+        - text: ": each worker thread owns a double-ended deque of tasks. The owner pushes and pops from the head in LIFO order — good for cache locality. When idle, a thief steals from the tail of another thread's deque in FIFO order — good for fairness and minimising contention."
+        - code [ref=e815]: fork()
+        - text: submits a subtask to the current thread's deque.
+        - code [ref=e816]: join()
+        - text: waits, but rather than blocking, the waiting thread helps execute other pending tasks — this is task-joining compensation and prevents thread starvation under deep recursion.
+        - code [ref=e817]: Stream.parallel()
+        - text: and
+        - code [ref=e818]: CompletableFuture.supplyAsync()
+        - text: both use the common ForkJoinPool.
+      - document [ref=e820]:
+        - generic [ref=e822]:
+          - generic [ref=e829]: Worker Thread 1 Deque
+          - generic [ref=e833]:
+            - generic [ref=e834]:
+              - generic [ref=e841]: Worker Thread 2 Deque
+              - generic [ref=e848]: steals Task C
+              - generic [ref=e849]:
+                - paragraph [ref=e856]: "HEAD: empty"
+                - paragraph [ref=e863]: "TAIL: idle looking for work"
+            - paragraph [ref=e870]: "HEAD: Task A pop/push here"
+            - paragraph [ref=e877]: Task B
+            - paragraph [ref=e884]: "TAIL: Task C steal from here"
+            - paragraph [ref=e891]: fork Task A
+            - paragraph [ref=e898]: join on Task C
+            - paragraph [ref=e905]: Thread 1 helps execute\nother tasks while waiting
+            - paragraph [ref=e912]: "NOTE: pool size defaults to\\navailableProcessors - 1\\nUse custom executor for IO-bound work"
+      - separator [ref=e913]
+      - heading "Virtual Threads" [level=2] [ref=e914]
+      - paragraph [ref=e915]:
+        - text: Virtual threads, introduced in Java 21 via Project Loom, are JVM-managed lightweight threads. A platform thread maps one-to-one with an OS thread and requires roughly one megabyte of stack. A virtual thread is
+        - strong [ref=e916]: multiplexed
+        - text: ": when it blocks on I/O, sleep, or a lock, the JVM unmounts it from its carrier OS thread and parks its continuation — a snapshot of the call stack. The freed carrier thread immediately picks up another virtual thread. You can have millions of virtual threads with negligible memory overhead. Crucially, you write blocking code as normal —"
+        - code [ref=e917]: Thread.sleep()
+        - text: ", blocking I/O — and the JVM transparently converts it to non-blocking. The main caveat is"
+        - strong [ref=e918]: pinning
+        - text: ": holding a"
+        - code [ref=e919]: synchronized
+        - text: lock while blocking pins the virtual thread to its carrier, negating the benefit.
+      - document [ref=e921]:
+        - generic [ref=e923]:
+          - generic [ref=e924]:
+            - generic [ref=e929]:
+              - generic [ref=e930]: Virtual Threads (millions,
+              - generic [ref=e931]: cheap)
+            - generic [ref=e936]:
+              - generic [ref=e937]: Platform Threads (OS
+              - generic [ref=e938]: Threads — limited,
+              - generic [ref=e939]: expensive)
+          - generic [ref=e947]:
+            - generic [ref=e953]: mounts
+            - generic [ref=e959]: blocks on IO
+            - generic [ref=e965]: now mounts
+            - generic [ref=e971]: rescheduled on any carrier
+          - generic [ref=e972]:
+            - paragraph [ref=e979]: Carrier Thread 1
+            - paragraph [ref=e986]: Carrier Thread 2
+            - paragraph [ref=e993]: VT 1 running
+            - paragraph [ref=e1000]: VT 2 parked on IO
+            - paragraph [ref=e1007]: VT 3 parked on sleep
+            - paragraph [ref=e1014]: VT 4 waiting
+            - paragraph [ref=e1021]: JVM unmounts VT1\nsaves continuation
+            - paragraph [ref=e1028]: IO completes
+            - paragraph [ref=e1035]: "NOTE: synchronized blocks cause PINNING\\nuse ReentrantLock instead for virtual-thread-friendly code"
+      - separator [ref=e1036]
+      - heading "Semaphores" [level=2] [ref=e1037]
+      - paragraph [ref=e1038]:
+        - text: A semaphore holds a count of
+        - strong [ref=e1039]: permits
+        - text: ". A thread must acquire a permit to proceed; if none are available it blocks until one is released. Think of a parking lot with N spaces: the semaphore is the gate. This is perfect for rate-limiting access to bounded resources — database connections, API calls, file handles."
+        - code [ref=e1040]: Semaphore(1)
+        - text: "behaves like a mutex, but with a critical difference: any thread can release it, unlike an owning lock. This makes semaphores suitable for producer-consumer signalling where one thread signals another. Java's"
+        - code [ref=e1041]: Semaphore
+        - text: class is built on AQS, so it inherits fair and unfair modes.
+      - document [ref=e1043]:
+        - generic [ref=e1045]:
+          - generic [ref=e1052]:
+            - generic [ref=e1058]: acquire
+            - generic [ref=e1064]: acquire
+            - generic [ref=e1070]: acquire
+            - generic [ref=e1076]: acquire
+            - generic [ref=e1082]: release
+            - generic [ref=e1088]: permit available
+          - generic [ref=e1089]:
+            - paragraph [ref=e1096]: Semaphore permits = 3
+            - paragraph [ref=e1103]: Thread 1
+            - paragraph [ref=e1110]: Permit 1 granted
+            - paragraph [ref=e1117]: Thread 2
+            - paragraph [ref=e1124]: Permit 2 granted
+            - paragraph [ref=e1131]: Thread 3
+            - paragraph [ref=e1138]: Permit 3 granted
+            - paragraph [ref=e1145]: Thread 4
+            - paragraph [ref=e1152]: Blocked in AQS queue\n0 permits left
+            - paragraph [ref=e1159]: Thread 4 unparked\nPermit granted
+            - paragraph [ref=e1166]: "NOTE: Semaphore has no owner concept\\nany thread can release useful for signalling"
+      - separator [ref=e1167]
+      - heading "GC Roots" [level=2] [ref=e1168]
+      - paragraph [ref=e1169]: "GC roots are the starting points for garbage collection's reachability analysis. The collector traces all object references starting from roots; any object not reachable from a root is garbage. The roots are: local variables and operand stacks in all active thread stack frames; static fields of all loaded classes; JNI native references; references held by JVM internals such as class loaders, interned strings, and synchronised monitors. Active threads themselves are roots — any object reachable from a running thread's stack survives. Memory leaks in Java usually mean you accidentally kept a reference in a long-lived structure without ever removing it. The GC correctly keeps it alive because it is reachable — the problem is your code, not the GC."
+      - document [ref=e1171]:
+        - generic [ref=e1173]:
+          - generic [ref=e1180]: GC Roots — always live
+          - generic [ref=e1182]:
+            - paragraph [ref=e1189]: Thread Stack Frames\nlocal variables
+            - paragraph [ref=e1196]: Static Fields\nof loaded classes
+            - paragraph [ref=e1203]: JNI Native References
+            - paragraph [ref=e1210]: Interned Strings\nClass Loader refs
+            - paragraph [ref=e1217]: Object A
+            - paragraph [ref=e1224]: Object B
+            - paragraph [ref=e1231]: Object C
+            - paragraph [ref=e1238]: Object D
+            - paragraph [ref=e1245]: Object E no reference\nfrom any root
+            - paragraph [ref=e1252]: COLLECTED by GC
+            - paragraph [ref=e1259]: Object E referenced\nthrough root chain
+            - paragraph [ref=e1266]: "NOTE: A static HashMap holding\\nlisteners without removal IS a memory leak\\nthe objects are genuinely reachable"
+      - separator [ref=e1267]
+      - heading "G1 GC" [level=2] [ref=e1268]
+      - paragraph [ref=e1269]:
+        - text: G1 (Garbage First), the default collector since Java 9, divides the heap into equal-sized regions of one to thirty-two megabytes each. Unlike older collectors with fixed young and old spaces, each region is labelled dynamically as Eden, Survivor, or Old. G1 tracks the density of garbage in every region. When it collects, it prioritises the regions with the most garbage — hence
+        - emphasis [ref=e1270]: Garbage First
+        - text: — maximising space reclaimed per millisecond of pause. The key tuning parameter is
+        - code [ref=e1271]: MaxGCPauseMillis
+        - text: ": G1 will select however many regions it can collect while staying within your target pause time. The danger is falling back to a stop-the-world full GC when your application generates garbage faster than G1 can collect it."
+      - document [ref=e1273]:
+        - generic [ref=e1279]:
+          - generic [ref=e1280]:
+            - generic [ref=e1286]:
+              - generic [ref=e1287]: JVM Heap — divided into
+              - generic [ref=e1288]: equal regions
+            - generic [ref=e1290]:
+              - paragraph [ref=e1297]: Eden
+              - paragraph [ref=e1304]: Eden
+              - paragraph [ref=e1311]: Survivor
+              - paragraph [ref=e1318]: Old
+              - paragraph [ref=e1325]: Eden
+              - paragraph [ref=e1332]: Old
+              - paragraph [ref=e1339]: Old
+              - paragraph [ref=e1346]: Survivor
+              - paragraph [ref=e1353]: Humongous
+          - paragraph [ref=e1360]: Object allocation fills Eden regions
+          - paragraph [ref=e1367]: "Minor GC: collect Eden\\npromote survivors"
+          - paragraph [ref=e1374]: Concurrent Marking\nfinds garbage while app runs
+          - paragraph [ref=e1381]: Mixed Collection\nprioritise regions with most garbage
+          - paragraph [ref=e1388]: Stay within MaxGCPauseMillis target
+          - paragraph [ref=e1395]: Too much allocation pressure
+          - paragraph [ref=e1402]: Full GC stop-the-world\nSHOULD BE AVOIDED
+          - paragraph [ref=e1409]: "NOTE: G1 selects regions by garbage density\\nnot by generation this is what Garbage First means"
+      - separator [ref=e1410]
+      - heading "Object Header Layout" [level=2] [ref=e1411]
+      - paragraph [ref=e1412]:
+        - text: "Every Java object has a header before its fields. On a 64-bit JVM the header consists of two machine words: the"
+        - strong [ref=e1413]: mark word
+        - text: and the
+        - strong [ref=e1414]: klass pointer
+        - text: . The mark word (8 bytes) encodes the object's identity hash code, GC age (how many collections it has survived), lock state (biased, thin, or fat lock), and a GC forwarding pointer during collection. The klass pointer references the class metadata in Metaspace. With compressed OOPs enabled (the default), the klass pointer shrinks to 4 bytes, giving a 12-byte header, padded to 16 bytes for alignment. An object with no fields is still 16 bytes. An
+        - code [ref=e1415]: Integer
+        - text: (one int field) is also 16 bytes. This is why boxing primitives quadruples memory consumption compared to bare int arrays.
+      - document [ref=e1417]:
+        - generic [ref=e1419]:
+          - generic [ref=e1429]: vs
+          - generic [ref=e1430]:
+            - generic [ref=e1431]:
+              - generic [ref=e1437]:
+                - generic [ref=e1438]: Java Object in Memory
+                - generic [ref=e1439]: (64-bit, compressed OOPs)
+              - generic [ref=e1440]:
+                - paragraph [ref=e1447]: Mark Word 8 bytes\nhash code, GC age, lock bits, forwarding ptr
+                - paragraph [ref=e1454]: Klass Pointer 4 bytes compressed\npoints to class metadata in Metaspace
+                - paragraph [ref=e1461]: Alignment Padding 4 bytes\nobject aligned to 8-byte boundary
+                - paragraph [ref=e1468]: Instance Fields\nstored after header
+            - paragraph [ref=e1475]: Plain int 4 bytes
+            - paragraph [ref=e1482]: Integer object 16 bytes header plus 4 bytes field equals 16 bytes total
+            - paragraph [ref=e1489]: "NOTE: Long array uses 8 bytes per element\\nLong object array uses 16 bytes per element\\nplus 8 bytes per reference 3x overhead"
+      - separator [ref=e1490]
+      - heading "Generics Type Erasure" [level=2] [ref=e1491]
+      - paragraph [ref=e1492]:
+        - text: Java generics are a compile-time feature only. The compiler checks types, inserts casts, and then
+        - strong [ref=e1493]: erases
+        - text: all generic type information before emitting bytecode. At runtime,
+        - code [ref=e1494]: List<String>
+        - text: and
+        - code [ref=e1495]: List<Integer>
+        - text: are both just
+        - code [ref=e1496]: List
+        - text: . The JVM has no awareness of what T was — this was a deliberate backward-compatibility decision that required zero JVM changes. The downside is that you cannot do
+        - code [ref=e1497]: new T()
+        - text: ","
+        - code [ref=e1498]: new T[]
+        - text: ", or"
+        - code [ref=e1499]: instanceof List<String>
+        - text: — the information simply does not exist at runtime. You recover it with a
+        - code [ref=e1500]: Class<T>
+        - text: token or by using an anonymous subclass to capture the type in the supertype signature — the classic type-token pattern used by Jackson's
+        - code [ref=e1501]: TypeReference
+        - text: .
+      - document [ref=e1503]:
+        - generic [ref=e1511]:
+          - paragraph [ref=e1518]: "Java source: List names = new ArrayList()"
+          - paragraph [ref=e1525]: Javac type-checks\ninserts casts
+          - paragraph [ref=e1532]: "Bytecode: List names = new ArrayList()\\nAll type parameters ERASED"
+          - paragraph [ref=e1539]: JVM sees raw types only
+          - paragraph [ref=e1546]: Compiler inserts checkcast at every get call\nso ClassCastException is still possible at runtime
+          - paragraph [ref=e1553]: "Trick: class TypeToken\\nnew TypeToken>(){}\\nkeeps T in supertype signature\\nreadable via reflection"
+          - paragraph [ref=e1560]: "NOTE: This is why you cannot write\\nnew T() or T[] — T is gone at runtime"
+      - separator [ref=e1561]
+      - heading "Bridge Methods" [level=2] [ref=e1562]
+      - paragraph [ref=e1563]:
+        - text: When a class overrides a generic method from a supertype, type erasure creates a signature mismatch. If you implement
+        - code [ref=e1564]: Comparable<String>
+        - text: with
+        - code [ref=e1565]: compareTo(String s)
+        - text: ", the JVM's raw"
+        - code [ref=e1566]: Comparable
+        - text: interface expects
+        - code [ref=e1567]: compareTo(Object o)
+        - text: . The compiler generates a
+        - strong [ref=e1568]: synthetic bridge method
+        - text: with the erased signature that casts its argument and delegates to your real method. This bridge is what the polymorphic call site hits; your typed method handles the actual logic. Bridge methods are invisible in source code but visible in decompiled bytecode and through reflection via
+        - code [ref=e1569]: Method.isBridge()
+        - text: .
+      - document [ref=e1571]:
+        - generic [ref=e1577]:
+          - paragraph [ref=e1584]: "Source: class MyComp implements Comparable\\n public int compareTo(String s) ..."
+          - paragraph [ref=e1591]: After type erasure, JVM needs compareTo(Object)\nbut class only has compareTo(String)
+          - paragraph [ref=e1598]: Compiler generates BRIDGE METHOD:\npublic synthetic int compareTo(Object o)\n return compareTo((String) o) delegates
+          - paragraph [ref=e1605]: Polymorphic call site calls compareTo(Object)\nhits bridge method first
+          - paragraph [ref=e1612]: Bridge delegates to your\ncompareTo(String) real logic
+          - paragraph [ref=e1619]: "NOTE: Method.isBridge() returns true\\nfor these synthetic methods in reflection"
+      - separator [ref=e1620]
+      - heading "Double-Checked Locking" [level=2] [ref=e1621]
+      - paragraph [ref=e1622]:
+        - text: Double-checked locking is a lazy initialisation pattern that checks the instance reference before and after acquiring the lock — avoiding synchronisation overhead once initialised. The classic implementation without
+        - code [ref=e1623]: volatile
+        - text: "was broken due to instruction reordering: the JVM can write the reference to the field before the object is fully initialised. A second thread passes the first null check, sees a non-null reference, and returns a half-initialised object. Declaring the field"
+        - code [ref=e1624]: volatile
+        - text: prevents the reordering. A simpler and safer alternative is the
+        - strong [ref=e1625]: Initialisation-On-Demand Holder
+        - text: pattern, which leverages class loading guarantees — no synchronisation required at all.
+      - document [ref=e1627]:
+        - generic [ref=e1629]:
+          - generic [ref=e1636]:
+            - generic [ref=e1642]: "no"
+            - generic [ref=e1648]: "yes"
+            - generic [ref=e1654]: "no"
+            - generic [ref=e1660]: "yes"
+          - generic [ref=e1661]:
+            - paragraph [ref=e1668]: getInstance called
+            - paragraph [ref=e1675]: instance == null?\nno lock
+            - paragraph [ref=e1682]: return instance
+            - paragraph [ref=e1689]: acquire lock
+            - paragraph [ref=e1696]: instance == null?\nwith lock
+            - paragraph [ref=e1703]: release and return
+            - paragraph [ref=e1710]: instance = new Singleton
+            - paragraph [ref=e1717]: BUG without volatile:\nJVM may write reference BEFORE\nobject fully initialised
+            - paragraph [ref=e1724]: Another thread gets\nhalf-initialised object
+            - paragraph [ref=e1731]: "FIX: declare field as\\nprivate static volatile Singleton instance"
+            - paragraph [ref=e1738]: volatile write flushes full object\nbefore reference is visible
+            - paragraph [ref=e1745]: "NOTE: Holder pattern is simpler:\\nstatic inner class loads lazily\\nvia class-loading guarantee no volatile needed"
+      - separator [ref=e1746]
+      - heading "readResolve" [level=2] [ref=e1747]
+      - paragraph [ref=e1748]:
+        - text: "Java serialisation normally bypasses constructors when reconstructing objects. For singletons this is catastrophic: deserialising gives you a second instance, breaking the pattern. If you define a"
+        - code [ref=e1749]: readResolve()
+        - text: method on a
+        - code [ref=e1750]: Serializable
+        - text: class, the deserialisation machinery calls it after constructing the object and uses its return value as the final result — discarding the newly constructed copy. You return the canonical instance. This works for enums automatically; you cannot deserialise a duplicate enum constant because the JVM handles it at the language level.
+      - document [ref=e1752]:
+        - generic [ref=e1755]: Your Class
+        - generic [ref=e1758]: Serialisation Engine
+        - generic [ref=e1761]: ObjectInputStream
+        - generic [ref=e1765]: Your Class
+        - generic [ref=e1769]: Serialisation Engine
+        - generic [ref=e1773]: ObjectInputStream
+        - generic [ref=e1776]: Without readResolve a second\ninstance leaks into the JVM\nbreaking singleton guarantee
+        - generic [ref=e1777]: readObject()
+        - generic [ref=e1778]: construct new instance\n(bypassing constructor)
+        - generic [ref=e1780]: call readResolve() if defined
+        - generic [ref=e1781]: return INSTANCE (canonical singleton)
+        - generic [ref=e1782]: discard newly constructed copy
+        - generic [ref=e1784]: return canonical INSTANCE
+      - separator [ref=e1785]
+      - heading "SerialVersionUID" [level=2] [ref=e1786]
+      - paragraph [ref=e1787]:
+        - text: When Java serialises an object, it writes a fingerprint of the class — the
+        - code [ref=e1788]: serialVersionUID
+        - text: — into the byte stream. On deserialisation it computes the current class's fingerprint and compares. A mismatch throws
+        - code [ref=e1789]: InvalidClassException
+        - text: . If you omit the declaration, Java auto-computes the UID from class name, interfaces, methods, and fields. This auto-computed value is sensitive to innocuous changes like adding a private helper method or recompiling with a different JDK version. Declaring it explicitly as
+        - code [ref=e1790]: private static final long serialVersionUID = 1L
+        - text: "pins the version, giving you full control over backward compatibility. The deeper principle: serialisation makes your class definition part of your data format."
+      - document [ref=e1792]:
+        - generic [ref=e1794]:
+          - generic [ref=e1798]:
+            - generic [ref=e1804]: match
+            - generic [ref=e1810]: mismatch
+          - generic [ref=e1811]:
+            - paragraph [ref=e1818]: Serialise object
+            - paragraph [ref=e1825]: Write bytes including\nserialVersionUID = computed hash
+            - paragraph [ref=e1832]: Deserialise later
+            - paragraph [ref=e1839]: Read serialVersionUID from stream\n= UID_stored
+            - paragraph [ref=e1846]: UID_stored ==\nUID_current class?
+            - paragraph [ref=e1853]: Deserialisation succeeds
+            - paragraph [ref=e1860]: InvalidClassException thrown
+            - paragraph [ref=e1867]: Declare explicitly:\nprivate static final long serialVersionUID = 1L\nYou control when to increment
+            - paragraph [ref=e1874]: "NOTE: Incrementing UID intentionally\\nbreaks old serialised data use when\\nthe class changes incompatibly"
+      - separator [ref=e1875]
+      - heading "StampedLock Optimistic Reads" [level=2] [ref=e1876]
+      - paragraph [ref=e1877]:
+        - code [ref=e1878]: StampedLock
+        - text: "adds a third locking mode beyond read and write:"
+        - strong [ref=e1879]: optimistic read
+        - text: ". You sample the write counter (acquiring a stamp without actually locking), perform your read, then validate the stamp. If no write occurred in the interim, you're done — zero lock overhead. If a write did happen, you fall back to a real read lock. This pattern is extremely fast when reads vastly outnumber writes because the common path involves no synchronisation at all. The critical constraint: the code between"
+        - code [ref=e1880]: tryOptimisticRead()
+        - text: and
+        - code [ref=e1881]: validate()
+        - text: must not have side effects and must tolerate reading potentially inconsistent data — the validation is what makes it safe.
+      - document [ref=e1883]:
+        - generic [ref=e1885]:
+          - generic [ref=e1892]:
+            - generic [ref=e1898]: "valid: no write"
+            - generic [ref=e1904]: "invalid: write happened"
+          - generic [ref=e1905]:
+            - paragraph [ref=e1912]: tryOptimisticRead sample write counter as stamp
+            - paragraph [ref=e1919]: Read x and y without locking
+            - paragraph [ref=e1926]: validate stamp\nhas any write occurred?
+            - paragraph [ref=e1933]: Use x and y safely FAST PATH
+            - paragraph [ref=e1940]: Acquire real readLock
+            - paragraph [ref=e1947]: Re-read x and y under lock
+            - paragraph [ref=e1954]: readLock unlock
+            - paragraph [ref=e1961]: "NOTE: Code between tryOptimisticRead\\nand validate must be free of side effects\\nand safe to re-execute"
+      - separator [ref=e1962]
+      - heading "NIO Selector Internals" [level=2] [ref=e1963]
+      - paragraph [ref=e1964]:
+        - text: Java NIO's
+        - code [ref=e1965]: Selector
+        - text: enables one thread to monitor many
+        - code [ref=e1966]: Channel
+        - text: "s simultaneously rather than dedicating a thread per connection. Internally it wraps OS-level multiplexing:"
+        - code [ref=e1967]: epoll
+        - text: on Linux,
+        - code [ref=e1968]: kqueue
+        - text: on macOS. You register each channel with a set of interest operations (
+        - code [ref=e1969]: OP_READ
+        - text: ","
+        - code [ref=e1970]: OP_WRITE
+        - text: ","
+        - code [ref=e1971]: OP_ACCEPT
+        - text: ","
+        - code [ref=e1972]: OP_CONNECT
+        - text: ). Calling
+        - code [ref=e1973]: select()
+        - text: blocks until at least one registered channel is ready. You iterate
+        - code [ref=e1974]: selectedKeys()
+        - text: "to find ready channels and handle them. A very common bug: if you do not remove the key from the selected set after handling it, the selector keeps returning it even when nothing new has happened, causing a busy-loop. This is the foundation of Netty, Tomcat NIO mode, and virtually every high-performance Java server."
+      - document [ref=e1976]:
+        - generic [ref=e1978]:
+          - generic [ref=e1989]:
+            - generic [ref=e1995]: READ
+            - generic [ref=e2001]: WRITE
+          - generic [ref=e2002]:
+            - paragraph [ref=e2009]: "Channel 1: client socket"
+            - paragraph [ref=e2016]: "Register channels with Selector\\ninterest: READ, WRITE, ACCEPT"
+            - paragraph [ref=e2023]: "Channel 2: server socket"
+            - paragraph [ref=e2030]: "Channel 3: another client"
+            - paragraph [ref=e2037]: selector.select blocks\nuntil at least one channel ready
+            - paragraph [ref=e2044]: iterate selectedKeys
+            - paragraph [ref=e2051]: key.isReadable?\nkey.isWritable?
+            - paragraph [ref=e2058]: read from channel
+            - paragraph [ref=e2065]: write to channel
+            - paragraph [ref=e2072]: REMOVE key from selectedKeys set
+            - paragraph [ref=e2079]: "NOTE: Forgetting to remove the key\\ncauses a tight busy-loop the most common NIO bug"
+      - separator [ref=e2080]
+      - heading "DirectByteBuffer Lifecycle" [level=2] [ref=e2081]
+      - paragraph [ref=e2082]:
+        - text: A
+        - code [ref=e2083]: DirectByteBuffer
+        - text: "allocates memory in native (off-heap) space rather than the Java heap. This is essential for I/O operations: data being transferred to or from the OS must not move during the transfer, but the GC can relocate heap objects at any time. Direct buffers are pinned at a fixed native address. The lifecycle problem: they are managed by Java heap objects via a"
+        - code [ref=e2084]: Cleaner
+        - text: (a phantom reference). When the Java object is GC'd, the Cleaner frees the native memory. But the Java heap may not feel pressure even as native memory fills up —
+        - code [ref=e2085]: "OutOfMemoryError: Direct buffer memory"
+        - text: can occur while the Java heap is mostly empty. Control the total allocation with
+        - code [ref=e2086]: "-XX:MaxDirectMemorySize"
+        - text: .
+      - document [ref=e2088]:
+        - generic [ref=e2095]:
+          - paragraph [ref=e2102]: ByteBuffer.allocateDirect(size)
+          - paragraph [ref=e2109]: Allocate native memory\noff-heap, fixed address
+          - paragraph [ref=e2116]: Create DirectByteBuffer Java object\non heap with Cleaner attached
+          - paragraph [ref=e2123]: IO operations use native address directly\nno GC relocation risk
+          - paragraph [ref=e2130]: Java object becomes unreachable
+          - paragraph [ref=e2137]: Cleaner phantom reference fires
+          - paragraph [ref=e2144]: Native memory freed
+          - paragraph [ref=e2151]: Java heap not under pressure\nGC does not run\nNative memory fills up
+          - paragraph [ref=e2158]: "OutOfMemoryError: Direct buffer memory\\nJava heap still mostly empty"
+          - paragraph [ref=e2165]: "NOTE: Pool and reuse DirectByteBuffers\\nNetty ByteBuf pool exists for this exact reason"
+      - separator [ref=e2166]
+      - heading "ClassLoader Delegation Model" [level=2] [ref=e2167]
+      - paragraph [ref=e2168]:
+        - text: "Java's class loading uses a parent-first delegation hierarchy. When a classloader is asked to load a class it first delegates to its parent. The chain is: Bootstrap (loads"
+        - code [ref=e2169]: java.*
+        - text: from the JDK modules) then Platform/Extension (loads
+        - code [ref=e2170]: javax.*
+        - text: ", extensions) then Application (loads your classpath). This prevents you from accidentally overriding a JDK class — Bootstrap always wins. The critical implication for multi-classloader environments (OSGi, application servers): if two different classloaders independently load the same fully-qualified class name from different JARs, the JVM treats them as"
+        - strong [ref=e2171]: completely different types
+        - text: ", causing"
+        - code [ref=e2172]: ClassCastException
+        - text: even though the class names are identical.
+      - document [ref=e2174]:
+        - generic [ref=e2176]:
+          - generic [ref=e2185]:
+            - generic [ref=e2191]: delegate first
+            - generic [ref=e2197]: delegate first
+            - generic [ref=e2203]: not found
+            - generic [ref=e2209]: not found
+            - generic [ref=e2215]: found in classpath
+          - generic [ref=e2216]:
+            - paragraph [ref=e2223]: Application ClassLoader\nloads your classpath
+            - paragraph [ref=e2230]: Platform ClassLoader\nloads javax.* extensions
+            - paragraph [ref=e2237]: Bootstrap ClassLoader\nloads java.* core JDK
+            - paragraph [ref=e2244]: Load com.example.MyClass
+            - paragraph [ref=e2251]: Class loaded by Application CL
+            - paragraph [ref=e2258]: Two classloaders load same class name\nfrom different JARs
+            - paragraph [ref=e2265]: JVM sees TWO distinct types\nClassCastException if you mix them
+            - paragraph [ref=e2272]: "NOTE: OSGi deliberately breaks parent delegation\\nfor module isolation each bundle has its own CL"
+      - separator [ref=e2273]
+      - heading "JIT Inlining Heuristics" [level=2] [ref=e2274]
+      - paragraph [ref=e2275]:
+        - text: "Method inlining is the most impactful JIT optimisation: the JIT copies a callee's bytecode into the caller, eliminating call overhead and enabling further optimisations like constant propagation, escape analysis, and dead code elimination. The heuristics are size and frequency driven. A method is inlined if its bytecode is smaller than"
+        - code [ref=e2276]: MaxInlineSize
+        - text: (default ~35 bytes). Hot methods (compiled at high tier) get a larger threshold controlled by
+        - code [ref=e2277]: FreqInlineSize
+        - text: "(up to ~325 bytes). Methods that are too large, have too many call sites, or dispatch polymorphically to more than two types resist inlining. The lesson: small, focused methods are not just good design — they are JIT-friendly."
+      - document [ref=e2279]:
+        - generic [ref=e2281]:
+          - generic [ref=e2286]:
+            - generic [ref=e2291]:
+              - generic [ref=e2292]: size less than MaxInlineSize
+              - generic [ref=e2293]: 35 bytes
+            - generic [ref=e2298]:
+              - generic [ref=e2299]: size less than
+              - generic [ref=e2300]: FreqInlineSize 325 bytes
+              - generic [ref=e2301]: AND hot
+            - generic [ref=e2307]: too large or cold
+          - generic [ref=e2308]:
+            - paragraph [ref=e2315]: Method call site
+            - paragraph [ref=e2322]: Method bytecode\nsize check
+            - paragraph [ref=e2329]: Always inline
+            - paragraph [ref=e2336]: Inline at hot threshold
+            - paragraph [ref=e2343]: Not inlined call overhead remains
+            - paragraph [ref=e2350]: Further optimisations enabled:\nconstant folding, escape analysis\ndead code elimination
+            - paragraph [ref=e2357]: Call, stack frame, argument passing overhead
+            - paragraph [ref=e2364]: Polymorphic call site\n3+ receiver types
+            - paragraph [ref=e2371]: Megamorphic cannot inline efficiently\nJIT uses virtual dispatch table
+            - paragraph [ref=e2378]: "NOTE: Small focused methods win twice:\\nbetter design AND better JIT inlining"
+      - separator [ref=e2379]
+      - heading "Deoptimisation" [level=2] [ref=e2380]
+      - paragraph [ref=e2381]:
+        - text: The JIT compiles code speculatively — it assumes that a virtual call always dispatches to
+        - code [ref=e2382]: SubclassA
+        - text: and inlines it. If
+        - code [ref=e2383]: SubclassB
+        - text: arrives at runtime, the assumption is violated and the JIT must
+        - strong [ref=e2384]: deoptimise
+        - text: ": discard the compiled code for that method, fall back to the interpreter for the current frame (on-stack replacement), and eventually recompile with weaker assumptions. Deoptimisation is normal and expected — it happens during class loading when new subclasses appear, when infrequent branches are suddenly taken, or when uncommon trap conditions are hit. The risk is a mass deoptimisation event under unusual input patterns that causes a sudden throughput drop in production."
+      - document [ref=e2386]:
+        - generic [ref=e2392]:
+          - paragraph [ref=e2399]: JIT compiles method with assumption:\nonly SubclassA ever appears
+          - paragraph [ref=e2406]: Optimised native code\nSubclassA inlined very fast
+          - paragraph [ref=e2413]: SubclassB arrives at runtime
+          - paragraph [ref=e2420]: Uncommon trap fires\nassumption violated
+          - paragraph [ref=e2427]: "Deoptimise: discard compiled code\\nfall back to interpreter for current frame"
+          - paragraph [ref=e2434]: Recompile with weaker assumption:\nbimorphic or virtual dispatch
+          - paragraph [ref=e2441]: Slightly slower than fully inlined\nbut correct for all subtypes
+          - paragraph [ref=e2448]: "NOTE: Monitor with -XX:+PrintDeoptimization\\nor JFR DeoptimizationEvent\\nMass deopt can cause sudden production slowdowns"
+      - separator [ref=e2449]
+      - heading "@Transactional Proxy" [level=2] [ref=e2450]
+      - paragraph [ref=e2451]:
+        - text: Spring's
+        - code [ref=e2452]: "@Transactional"
+        - text: works through AOP proxy objects. When you inject a service bean, Spring provides a proxy wrapping the real object. Calling a
+        - code [ref=e2453]: "@Transactional"
+        - text: method calls the proxy, which opens a transaction, delegates to your real method, and commits or rolls back on return. The most common gotcha is
+        - strong [ref=e2454]: self-invocation
+        - text: ": if"
+        - code [ref=e2455]: methodA()
+        - text: calls
+        - code [ref=e2456]: this.methodB()
+        - text: (both annotated), it bypasses the proxy entirely — no transaction is started for
+        - code [ref=e2457]: methodB
+        - text: . Private methods are silently ignored — CGLIB cannot proxy them. Catching and swallowing an exception inside the method causes a commit even though you handled a failure.
+      - document [ref=e2459]:
+        - generic [ref=e2462]: Database
+        - generic [ref=e2465]: Your Service real object
+        - generic [ref=e2468]: Spring Proxy CGLIB
+        - generic [ref=e2471]: Caller
+        - generic [ref=e2475]: Database
+        - generic [ref=e2479]: Your Service real object
+        - generic [ref=e2483]: Spring Proxy CGLIB
+        - generic [ref=e2487]: Caller
+        - generic [ref=e2488]:
+          - generic [ref=e2490]: alt
+          - generic [ref=e2491]: "[no exception]"
+          - generic [ref=e2492]: "[RuntimeException]"
+        - generic [ref=e2495]: "SELF-INVOCATION BUG: calling this.method()\\nskips proxy no transaction for inner call"
+        - generic [ref=e2496]: call transactionalMethod()
+        - generic [ref=e2497]: BEGIN TRANSACTION
+        - generic [ref=e2498]: delegate to real method
+        - generic [ref=e2499]: execute SQL
+        - generic [ref=e2500]: normal return
+        - generic [ref=e2501]: COMMIT
+        - generic [ref=e2502]: throws exception
+        - generic [ref=e2503]: ROLLBACK
+        - generic [ref=e2504]: return result
+      - separator [ref=e2505]
+      - heading "CGLIB" [level=2] [ref=e2506]
+      - paragraph [ref=e2507]:
+        - text: CGLIB (Code Generation Library) is a bytecode manipulation library Spring uses when JDK dynamic proxies are unavailable — that is, when your class does not implement an interface. CGLIB generates a subclass of your concrete class at runtime and overrides all eligible methods to insert AOP advice or transaction management. The generated class name appears in stack traces as
+        - code [ref=e2508]: YourClass$$EnhancerBySpringCGLIB$$abc123
+        - text: ". The constraints: your class must not be"
+        - code [ref=e2509]: final
+        - text: (CGLIB cannot subclass final classes), and target methods must be public or protected and non-final. Records and sealed classes are inherently final, which is one of the architectural pressures driving Spring toward interface-based design.
+      - document [ref=e2511]:
+        - generic [ref=e2513]:
+          - generic [ref=e2518]:
+            - generic [ref=e2524]: "YES"
+            - generic [ref=e2530]: "NO"
+          - generic [ref=e2531]:
+            - paragraph [ref=e2538]: Spring detects @Transactional\nor AOP advice needed
+            - paragraph [ref=e2545]: Does class\nimplement interface?
+            - paragraph [ref=e2552]: JDK Dynamic Proxy\nproxies the interface
+            - paragraph [ref=e2559]: CGLIB generates subclass\nat runtime via ASM bytecode manipulation
+            - generic [ref=e2566]:
+              - text: YourService
+              - math [ref=e2568]:
+                - generic [ref=e2569]:
+                  - generic [ref=e2570]: E
+                  - generic [ref=e2571]: "n"
+                  - generic [ref=e2572]: h
+                  - generic [ref=e2573]: a
+                  - generic [ref=e2574]: "n"
+                  - generic [ref=e2575]: c
+                  - generic [ref=e2576]: e
+                  - generic [ref=e2577]: r
+                  - generic [ref=e2578]: B
+                  - generic [ref=e2579]: "y"
+                  - generic [ref=e2580]: C
+                  - generic [ref=e2581]: G
+                  - generic [ref=e2582]: L
+                  - generic [ref=e2583]: I
+                  - generic [ref=e2584]: B
+              - text: xxx\noverrides all non-final public/protected methods
+            - paragraph [ref=e2591]: Each overridden method calls\nMethodInterceptor chain before/after delegation
+            - paragraph [ref=e2598]: final class CANNOT subclass
+            - paragraph [ref=e2605]: BeanCreationException
+            - paragraph [ref=e2612]: final method cannot override
+            - paragraph [ref=e2619]: Advice silently skipped
+            - paragraph [ref=e2626]: "NOTE: Spring Boot 2.x+ defaults to CGLIB\\neven for interfaces via proxy-target-class=true"
+      - separator [ref=e2627]
+      - heading "MethodHandles" [level=2] [ref=e2628]
+      - paragraph [ref=e2629]:
+        - code [ref=e2630]: MethodHandles
+        - text: provides a modern, JIT-friendly alternative to
+        - code [ref=e2631]: java.lang.reflect
+        - text: . A
+        - code [ref=e2632]: MethodHandle
+        - text: is a typed, directly invocable reference to a method, constructor, or field. Unlike reflection,
+        - code [ref=e2633]: MethodHandle
+        - text: invocations can be JIT-inlined, boxless, and allocation-free for primitive arguments. Lookup objects carry the caller's access rights — you can look up private methods of the enclosing class.
+        - code [ref=e2634]: MethodHandles
+        - text: are the implementation mechanism for
+        - code [ref=e2635]: invokedynamic
+        - text: ", lambda expressions ("
+        - code [ref=e2636]: LambdaMetafactory
+        - text: wraps a handle to the lambda body), and dynamic language dispatch.
+      - document [ref=e2638]:
+        - generic [ref=e2644]:
+          - paragraph [ref=e2651]: MethodHandles.lookup in caller class
+          - paragraph [ref=e2658]: findVirtual, findStatic, findConstructor\nfindGetter, findSetter
+          - paragraph [ref=e2665]: MethodHandle typed invokable reference
+          - paragraph [ref=e2672]: mh.invoke or mh.invokeExact\nJIT can inline like a regular call
+          - paragraph [ref=e2679]: "Lambda: () -> x + 1"
+          - paragraph [ref=e2686]: invokedynamic call site
+          - paragraph [ref=e2693]: LambdaMetafactory creates MethodHandle\nto lambda body
+          - paragraph [ref=e2700]: Wrapped in Functional Interface\nno extra allocation after first call
+          - paragraph [ref=e2707]: "NOTE: invokeExact requires exact type match\\ninvoke does automatic widening/narrowing\\nPrefer invokeExact for performance"
+      - separator [ref=e2708]
+      - heading "VarHandle" [level=2] [ref=e2709]
+      - paragraph [ref=e2710]:
+        - code [ref=e2711]: VarHandle
+        - text: ", introduced in Java 9, generalises"
+        - code [ref=e2712]: MethodHandle
+        - text: "to variable access — instance fields, static fields, and array elements — with fine-grained memory ordering semantics. You choose from four access modes:"
+        - strong [ref=e2713]: plain
+        - text: (no ordering),
+        - strong [ref=e2714]: opaque
+        - text: (prevents dead-code elimination but no cross-thread guarantee),
+        - strong [ref=e2715]: release-acquire
+        - text: (establishes happens-before), and
+        - strong [ref=e2716]: volatile
+        - text: "(full volatile semantics). The big benefit:"
+        - code [ref=e2717]: AtomicInteger
+        - text: "-like CAS operations on ordinary primitive fields without wrapper object allocation. The JDK rewrote"
+        - code [ref=e2718]: Atomic
+        - text: classes internally to use
+        - code [ref=e2719]: VarHandle
+        - text: for exactly this reason.
+      - document [ref=e2721]:
+        - generic [ref=e2727]:
+          - generic [ref=e2728]:
+            - generic [ref=e2734]:
+              - generic [ref=e2735]: Access Modes weakest to
+              - generic [ref=e2736]: strongest
+            - generic [ref=e2737]:
+              - paragraph [ref=e2744]: Plain no ordering\nbest for single-threaded or already-guarded access
+              - paragraph [ref=e2751]: Opaque no reorder past this point\nno cross-thread visibility
+              - paragraph [ref=e2758]: Release-Acquire establishes happens-before\nbetween release write and acquire read
+              - paragraph [ref=e2765]: Volatile full sequential consistency\nstrongest guarantee
+          - paragraph [ref=e2772]: VarHandle vh = lookup.findVarHandle(MyClass.class, count, int.class)
+          - paragraph [ref=e2779]: vh.compareAndSet(obj, expected, update)\nCAS on plain int field no boxing
+          - paragraph [ref=e2786]: "NOTE: JDK AtomicInteger internals\\nnow use VarHandle instead of Unsafe\\nfor type safety without performance loss"
+      - separator [ref=e2787]
+      - heading "TLAB — Thread-Local Allocation Buffer" [level=2] [ref=e2788]
+      - paragraph [ref=e2789]: Allocating objects on the heap without TLABs would require atomic synchronisation on every allocation. TLABs solve this by giving each thread a private chunk of Eden space. Allocation within the TLAB simply bumps the thread's local pointer — no synchronisation, essentially as cheap as stack allocation. When the TLAB is exhausted, the thread requests a new one, requiring only brief synchronisation. Very large objects that exceed the TLAB size are allocated directly in Eden or Old generation with synchronisation, which is why large objects are relatively expensive to allocate frequently.
+      - document [ref=e2791]:
+        - generic [ref=e2793]:
+          - generic [ref=e2800]: Eden Space
+          - generic [ref=e2804]:
+            - paragraph [ref=e2811]: Thread 1 TLAB\nprivate chunk
+            - paragraph [ref=e2818]: Thread 2 TLAB\nprivate chunk
+            - paragraph [ref=e2825]: Thread 3 TLAB\nprivate chunk
+            - paragraph [ref=e2832]: Free Eden space
+            - paragraph [ref=e2839]: "Thread 1: new Object"
+            - paragraph [ref=e2846]: bump Thread 1 local pointer\nno synchronisation needed
+            - paragraph [ref=e2853]: TLAB exhausted
+            - paragraph [ref=e2860]: Request new TLAB from JVM\nbrief global synchronisation
+            - paragraph [ref=e2867]: New chunk assigned from Free space
+            - paragraph [ref=e2874]: Very large object > TLAB
+            - paragraph [ref=e2881]: Allocate directly in Eden or Old gen\nrequires synchronisation
+            - paragraph [ref=e2888]: "NOTE: Tune with -XX:TLABSize\\nMany TLAB misses in GC logs suggest\\nobjects too large for default TLAB"
+      - separator [ref=e2889]
+      - heading "Sealed Classes" [level=2] [ref=e2890]
+      - paragraph [ref=e2891]:
+        - text: "Sealed classes, introduced in Java 17, restrict which classes may extend or implement a type by declaring the permitted subclasses explicitly. This serves one primary purpose: enabling"
+        - strong [ref=e2892]: exhaustive pattern matching
+        - text: . When the compiler knows all possible subtypes, it can verify that your
+        - code [ref=e2893]: switch
+        - text: expression handles every case, giving you the same safety as an enum while allowing subclasses to have different fields and methods. Sealed classes pair naturally with records to create algebraic data type patterns — the Java equivalent of Scala sealed traits or Haskell sum types.
+      - document [ref=e2895]:
+        - generic [ref=e2897]:
+          - generic [ref=e2903]:
+            - generic [ref=e2909]: all covered
+            - generic [ref=e2915]: case missing
+          - generic [ref=e2916]:
+            - paragraph [ref=e2923]: sealed interface Shape\npermits Circle, Rectangle, Triangle
+            - paragraph [ref=e2930]: final class Circle\n double radius
+            - paragraph [ref=e2937]: final class Rectangle\n double width, height
+            - paragraph [ref=e2944]: final class Triangle\n double base, height
+            - paragraph [ref=e2951]: switch expression on Shape
+            - paragraph [ref=e2958]: Compiler checks\nall permits listed covered
+            - paragraph [ref=e2965]: No default needed\nCompiler guarantees exhaustiveness
+            - paragraph [ref=e2972]: "Compile error: missing case Triangle"
+            - paragraph [ref=e2979]: "NOTE: Sealed plus Record is the Java idiom\\nfor algebraic data types ADTs\\nEnables safe exhaustive domain modelling"
+      - separator [ref=e2980]
+      - heading "Lock Inflation" [level=2] [ref=e2981]
+      - paragraph [ref=e2982]:
+        - text: Java's
+        - code [ref=e2983]: synchronized
+        - text: locking passes through several states to optimise the common uncontended case. A new object starts
+        - strong [ref=e2984]: unlocked
+        - text: . The first thread to lock it acquires a
+        - strong [ref=e2985]: biased lock
+        - text: — just a thread ID written into the mark word. Future locks by the same thread are essentially free. When a second thread attempts to lock the biased object, the bias is revoked at a safe point, and the lock inflates to a
+        - strong [ref=e2986]: thin lock
+        - text: — implemented with a CAS on the mark word. Under sustained contention where CAS keeps failing, the lock inflates to a
+        - strong [ref=e2987]: fat lock
+        - text: — an OS monitor is allocated, and blocking threads are parked by the OS. Modern JVMs (Java 15+) deprecated biased locking.
+      - document [ref=e2989]:
+        - generic [ref=e2991]:
+          - generic [ref=e3014]:
+            - generic [ref=e3020]: object created
+            - generic [ref=e3025]:
+              - generic [ref=e3026]: first thread locks\nstore
+              - generic [ref=e3027]: thread ID in mark word
+            - generic [ref=e3032]:
+              - generic [ref=e3033]: same thread
+              - generic [ref=e3034]: re-locks\nnearly free check
+            - generic [ref=e3039]:
+              - generic [ref=e3040]: second thread
+              - generic [ref=e3041]: contends\nbias revoked at
+              - generic [ref=e3042]: safepoint
+            - generic [ref=e3047]:
+              - generic [ref=e3048]: CAS on mark word
+              - generic [ref=e3049]: succeeds\nfast path no OS
+              - generic [ref=e3050]: call
+            - generic [ref=e3055]:
+              - generic [ref=e3056]: CAS keeps failing\nOS
+              - generic [ref=e3057]: monitor allocated
+            - generic [ref=e3062]:
+              - generic [ref=e3063]: threads park via
+              - generic [ref=e3064]: OS\nblocking expensive
+            - generic [ref=e3070]: all threads release
+          - generic [ref=e3071]:
+            - paragraph [ref=e3082]: Unlocked
+            - paragraph [ref=e3091]: BiasedLock
+            - paragraph [ref=e3100]: ThinLock
+            - paragraph [ref=e3109]: FatLock
+            - paragraph [ref=e3118]: Deprecated in Java 15+\nhardware CAS fast enough
+            - paragraph [ref=e3127]: Once inflated stays fat\nfor lifetime of object
+      - separator [ref=e3140]
+      - heading "Write Barriers" [level=2] [ref=e3141]
+      - paragraph [ref=e3142]:
+        - text: A write barrier is code the GC inserts around every reference write in your application. When you write
+        - code [ref=e3143]: a.field = b
+        - text: ", you may create a reference from an old-generation object to a young-generation object, or cross a G1 region boundary. Without tracking this, the GC would have to scan the entire old generation to find references into the young generation during a minor collection. Write barriers maintain"
+        - strong [ref=e3144]: remembered sets
+        - text: — one per region in G1 — recording cross-region references as they occur. During a young collection, the GC scans only remembered sets, not the whole heap. Write barriers also implement concurrent mark invariants.
+      - document [ref=e3146]:
+        - generic [ref=e3148]:
+          - generic [ref=e3154]:
+            - generic [ref=e3160]: "YES"
+            - generic [ref=e3166]: "NO"
+          - generic [ref=e3167]:
+            - paragraph [ref=e3174]: a.field = b (reference write in application code)
+            - paragraph [ref=e3181]: Write Barrier code executes
+            - paragraph [ref=e3188]: Is b in a\ndifferent GC region?
+            - paragraph [ref=e3195]: "Record in b region's\\nRemembered Set: a points here"
+            - paragraph [ref=e3202]: No action needed
+            - paragraph [ref=e3209]: Young Collection begins
+            - paragraph [ref=e3216]: Scan Remembered Sets of young regions\nfind all old-gen pointers into young
+            - paragraph [ref=e3223]: Avoid scanning ALL of old gen\n= fast minor GC
+            - paragraph [ref=e3230]: Concurrent Mark
+            - paragraph [ref=e3237]: "SATB barrier: snapshot references\\nbeing overwritten before they vanish"
+            - paragraph [ref=e3244]: "NOTE: Write barriers add a small constant\\noverhead to every reference store\\nThis is an inherent GC cost you cannot eliminate"
+      - separator [ref=e3245]
+      - heading "DispatcherServlet" [level=2] [ref=e3246]
+      - paragraph [ref=e3247]:
+        - code [ref=e3248]: DispatcherServlet
+        - text: is Spring MVC's front controller. Every HTTP request enters through it, and it orchestrates the entire request lifecycle. It uses
+        - code [ref=e3249]: HandlerMapping
+        - text: to find which controller handles the request,
+        - code [ref=e3250]: HandlerAdapter
+        - text: to invoke the handler,
+        - code [ref=e3251]: MessageConverter
+        - text: for REST response serialisation, and
+        - code [ref=e3252]: ViewResolver
+        - text: "to resolve logical view names for server-side rendering. The pipeline runs: pre-handler interceptors, then the handler, then post-handler interceptors, then view rendering (or response writing for"
+        - code [ref=e3253]: "@ResponseBody"
+        - text: ), then after-completion interceptors.
+      - document [ref=e3255]:
+        - generic [ref=e3258]: MessageConverter
+        - generic [ref=e3261]: Your Controller
+        - generic [ref=e3264]: Interceptors
+        - generic [ref=e3267]: HandlerMapping
+        - generic [ref=e3270]: DispatcherServlet
+        - generic [ref=e3273]: HTTP Client
+        - generic [ref=e3277]: MessageConverter
+        - generic [ref=e3281]: Your Controller
+        - generic [ref=e3285]: Interceptors
+        - generic [ref=e3289]: HandlerMapping
+        - generic [ref=e3293]: DispatcherServlet
+        - generic [ref=e3297]: HTTP Client
+        - generic [ref=e3298]:
+          - generic [ref=e3300]: alt
+          - generic [ref=e3301]: "[REST response]"
+          - generic [ref=e3302]: "[MVC view]"
+        - generic [ref=e3303]: HTTP Request
+        - generic [ref=e3304]: find handler for URL + method
+        - generic [ref=e3305]: HandlerExecutionChain
+        - generic [ref=e3306]: preHandle
+        - generic [ref=e3307]: invoke handler method
+        - generic [ref=e3308]: return value or ModelAndView
+        - generic [ref=e3309]: postHandle
+        - generic [ref=e3310]: serialise return value to JSON
+        - generic [ref=e3311]: HTTP Response with body
+        - generic [ref=e3312]: render HTML response
+        - generic [ref=e3313]: afterCompletion
+      - separator [ref=e3314]
+      - heading "Stream Short-Circuiting" [level=2] [ref=e3315]
+      - paragraph [ref=e3316]:
+        - text: Certain stream terminal operations are
+        - strong [ref=e3317]: short-circuit
+        - text: ": they produce a result without processing the entire stream."
+        - code [ref=e3318]: findFirst
+        - text: ","
+        - code [ref=e3319]: findAny
+        - text: ","
+        - code [ref=e3320]: anyMatch
+        - text: ","
+        - code [ref=e3321]: allMatch
+        - text: ","
+        - code [ref=e3322]: noneMatch
+        - text: ", and"
+        - code [ref=e3323]: limit
+        - text: are all short-circuit. In a pipeline with
+        - code [ref=e3324]: filter
+        - text: followed by
+        - code [ref=e3325]: findFirst
+        - text: ", elements are processed one at a time until one passes the filter — the pipeline stops immediately. This is why infinite streams ("
+        - code [ref=e3326]: Stream.iterate(0, n -> n+1)
+        - text: ) are usable with short-circuit terminals. The deeper principle is that all stream intermediate operations are lazy — they do not execute until a terminal operation is called. The terminal drives the pipeline, pulling elements through only as needed.
+      - document [ref=e3328]:
+        - generic [ref=e3334]:
+          - paragraph [ref=e3341]: "Stream.iterate(0, n -> n+1)\\ninfinite sequence: 0,1,2,3..."
+          - paragraph [ref=e3348]: filter(n -> n % 2 == 0)\n2,4,6,8...
+          - paragraph [ref=e3355]: findFirst SHORT CIRCUIT
+          - paragraph [ref=e3362]: Returns Optional.of(0)\nSTOPS immediately rest never computed
+          - paragraph [ref=e3369]: Intermediate ops do NOT execute\nuntil terminal is called
+          - paragraph [ref=e3376]: Terminal PULLS elements\none at a time through the pipeline
+          - paragraph [ref=e3383]: Short-circuit terminal STOPS\nas soon as answer is known
+          - paragraph [ref=e3390]: "NOTE: Stream.of(...).count()\\nif SIZED characteristic present\\noptimises away the traversal entirely"
+      - separator [ref=e3391]
+      - heading "Spliterator" [level=2] [ref=e3392]
+      - paragraph [ref=e3393]:
+        - code [ref=e3394]: Spliterator
+        - text: (Splitting Iterator) is the data-source abstraction behind parallel streams. Like an iterator it traverses elements; unlike one it can
+        - strong [ref=e3395]: split itself
+        - text: ", yielding two"
+        - code [ref=e3396]: Spliterator
+        - text: s each covering roughly half the source.
+        - code [ref=e3397]: ForkJoinPool
+        - text: uses this to recursively decompose data for parallel execution. Spliterators also advertise
+        - strong [ref=e3398]: characteristics
+        - text: ":"
+        - code [ref=e3399]: SIZED
+        - text: ","
+        - code [ref=e3400]: ORDERED
+        - text: ","
+        - code [ref=e3401]: DISTINCT
+        - text: ","
+        - code [ref=e3402]: SORTED
+        - text: ","
+        - code [ref=e3403]: IMMUTABLE
+        - text: . These characteristics enable optimisations —
+        - code [ref=e3404]: SIZED
+        - text: allows
+        - code [ref=e3405]: count()
+        - text: to short-circuit;
+        - code [ref=e3406]: UNORDERED
+        - text: lets certain parallel operations skip order-preserving overhead. Implementing a custom
+        - code [ref=e3407]: Spliterator
+        - text: makes any data structure play well with
+        - code [ref=e3408]: Stream.parallel()
+        - text: .
+      - document [ref=e3410]:
+        - generic [ref=e3412]:
+          - generic [ref=e3422]:
+            - generic [ref=e3428]: trySplit
+            - generic [ref=e3434]: trySplit
+            - generic [ref=e3440]: trySplit
+            - generic [ref=e3446]: trySplit
+          - generic [ref=e3447]:
+            - paragraph [ref=e3454]: Your data source e.g. ArrayList of 1M elements
+            - paragraph [ref=e3461]: Spliterator covering 0..999999
+            - paragraph [ref=e3468]: Spliterator 0..499999
+            - paragraph [ref=e3475]: Spliterator 500000..999999
+            - paragraph [ref=e3482]: 0..249999
+            - paragraph [ref=e3489]: 250000..499999
+            - paragraph [ref=e3496]: ForkJoinPool
+            - paragraph [ref=e3503]: Worker threads process\neach sub-spliterator in parallel
+            - paragraph [ref=e3510]: Characteristics flags
+            - paragraph [ref=e3517]: "SIZED: count without traversal"
+            - paragraph [ref=e3524]: "ORDERED: must maintain encounter order"
+            - paragraph [ref=e3531]: "DISTINCT: skip distinct step"
+            - paragraph [ref=e3538]: "NOTE: UNORDERED parallel streams\\ncan be significantly faster they skip\\norder maintenance in collect operations"
+      - separator [ref=e3539]
+      - heading "Try-With-Resources" [level=2] [ref=e3540]
+      - paragraph [ref=e3541]:
+        - text: Try-with-resources ensures that
+        - code [ref=e3542]: AutoCloseable
+        - text: resources are closed reliably. The compiler transforms the syntax into a
+        - code [ref=e3543]: try-finally
+        - text: with individually guarded close calls for each resource, in reverse declaration order. The critical improvement over manual
+        - code [ref=e3544]: try-finally
+        - text: ": if both the body and a"
+        - code [ref=e3545]: close()
+        - text: call throw, the close exception is attached to the original exception as a
+        - strong [ref=e3546]: suppressed exception
+        - text: via
+        - code [ref=e3547]: addSuppressed()
+        - text: ", rather than replacing it. In manual"
+        - code [ref=e3548]: try-finally
+        - text: the close exception would swallow the original — the bug you actually cared about would vanish.
+      - document [ref=e3550]:
+        - generic [ref=e3556]:
+          - paragraph [ref=e3563]: "try (A a = ...; B b = ...) { body }"
+          - paragraph [ref=e3570]: "Compiler expands to:"
+          - paragraph [ref=e3577]: open A
+          - paragraph [ref=e3584]: open B
+          - paragraph [ref=e3591]: execute body
+          - paragraph [ref=e3598]: close B first\nin own try-catch
+          - paragraph [ref=e3605]: close A second\nin own try-catch
+          - paragraph [ref=e3612]: body throws E1\nclose throws E2
+          - paragraph [ref=e3619]: E2 attached as suppressed\nE1.getSuppressed() returns E2\nE1 is the primary exception
+          - paragraph [ref=e3626]: Manual try-finally:\nclose exception REPLACES body exception\nE1 is lost forever
+          - paragraph [ref=e3633]: Original bug invisible
+          - paragraph [ref=e3640]: "NOTE: Always use try-with-resources\\nfor any Closeable or AutoCloseable\\nNever rely on manual finally-close"
+      - separator [ref=e3641]
+      - heading "🗄️ Part 2 — Databases and Distributed Systems" [level=1] [ref=e3642]
+      - separator [ref=e3643]
+      - heading "Indexing" [level=2] [ref=e3644]
+      - paragraph [ref=e3645]:
+        - text: An index is a separate data structure the database maintains alongside table data to speed up lookups. Without an index, the database must examine every row — a
+        - strong [ref=e3646]: full table scan
+        - text: "— to find matching rows. With a B-tree index, it navigates a sorted tree structure to locate matches in O(log n) operations. Indexes trade write overhead for read speed: every insert, update, or delete must also update all relevant indexes. The art of indexing is choosing which columns to index based on your actual query patterns, because over-indexing slows writes without proportionate read benefit."
+      - document [ref=e3648]:
+        - generic [ref=e3650]:
+          - generic [ref=e3656]:
+            - generic [ref=e3662]: "NO"
+            - generic [ref=e3668]: "YES"
+          - generic [ref=e3669]:
+            - paragraph [ref=e3676]: SELECT * FROM orders WHERE customer_id = 42
+            - paragraph [ref=e3683]: Index on\ncustomer_id?
+            - paragraph [ref=e3690]: Full Table Scan\nread every row O(n)
+            - paragraph [ref=e3697]: B-tree index lookup\nO(log n) navigation
+            - paragraph [ref=e3704]: Jump directly to matching rows
+            - paragraph [ref=e3711]: Slow on large tables
+            - paragraph [ref=e3718]: Fast regardless of table size
+            - paragraph [ref=e3725]: INSERT or UPDATE
+            - paragraph [ref=e3732]: Must update ALL indexes on table
+            - paragraph [ref=e3739]: Write cost increases with number of indexes
+            - paragraph [ref=e3746]: "NOTE: Index only what you actually query\\nover-indexing harms write throughput\\nand wastes storage"
+      - separator [ref=e3747]
+      - heading "Clustering, Denormalisation, and Normalisation" [level=2] [ref=e3748]
+      - paragraph [ref=e3749]: "Normalisation structures a relational database to eliminate data redundancy — each fact stored exactly once, updates happen in one place, no anomalies. Normal forms from 1NF through BCNF codify increasingly strict rules. Denormalisation is the deliberate reversal: you duplicate data to avoid expensive joins, accepting that updates must propagate to multiple places. A clustered index physically stores table rows in index order. In MySQL InnoDB every table has exactly one clustered index — the primary key. Leaf nodes of the B-tree are the actual rows. Secondary indexes store the primary key as a pointer, so a secondary index lookup requires two B-tree traversals."
+      - document [ref=e3751]:
+        - generic [ref=e3757]:
+          - generic [ref=e3758]:
+            - generic [ref=e3765]: Denormalised schema
+            - paragraph [ref=e3773]: "orders: order_id, user_name, user_email, amount\\nDuplicated user data"
+          - generic [ref=e3774]:
+            - generic [ref=e3781]: Normalised schema
+            - generic [ref=e3788]: JOIN
+            - generic [ref=e3789]:
+              - paragraph [ref=e3796]: "users: user_id, name, email"
+              - paragraph [ref=e3803]: "orders: order_id, user_id, amount"
+          - paragraph [ref=e3810]: Single update location\nno anomalies
+          - paragraph [ref=e3817]: No JOIN needed on read\nfaster queries
+          - paragraph [ref=e3824]: Must update user_name in EVERY order row
+          - paragraph [ref=e3831]: "Clustered Index: rows physically sorted by PK\\nPK lookup = one B-tree traversal"
+          - paragraph [ref=e3838]: "Secondary index: stores PK pointer\\nlookup = two B-tree traversals"
+          - paragraph [ref=e3845]: "NOTE: Normalise first, denormalise\\nonly where measurement proves it necessary"
+      - separator [ref=e3846]
+      - heading "Read Replicas and Replication Modes" [level=2] [ref=e3847]
+      - paragraph [ref=e3848]:
+        - text: A read replica is a copy of the primary database that handles SELECT queries. Changes replicate from primary to replicas via WAL shipping or logical replication. The critical limitation is
+        - strong [ref=e3849]: replication lag
+        - text: ": the replica is always slightly behind the primary. Never use a replica for reads that must immediately follow a write. Leader-follower (single-leader) replication sends all writes to one leader; multi-leader allows multiple nodes to accept writes, enabling geographic distribution but requiring conflict resolution when two leaders concurrently update the same row."
+      - document [ref=e3851]:
+        - generic [ref=e3861]:
+          - generic [ref=e3862]:
+            - generic [ref=e3869]: Multi-Leader Replication
+            - generic [ref=e3873]:
+              - generic [ref=e3879]: sync
+              - generic [ref=e3885]: sync
+            - generic [ref=e3886]:
+              - paragraph [ref=e3893]: Leader Region A
+              - paragraph [ref=e3900]: Leader Region B
+              - paragraph [ref=e3907]: "CONFLICT: both update same row concurrently"
+              - paragraph [ref=e3914]: Resolution strategy needed:\nlast-write-wins, CRDT, or app-level merge
+          - paragraph [ref=e3921]: Primary Node\nhandles ALL writes
+          - paragraph [ref=e3928]: Replica 1\nhandles reads
+          - paragraph [ref=e3935]: Replica 2\nhandles reads
+          - paragraph [ref=e3942]: Replica 3\nhandles reads
+          - paragraph [ref=e3949]: Application write
+          - paragraph [ref=e3956]: Application read non-critical
+          - paragraph [ref=e3963]: Application read must be fresh
+          - paragraph [ref=e3970]: "Replication Lag: replicas are\\nalways slightly behind primary"
+          - paragraph [ref=e3977]: Write then immediate read on replica\nmay miss your own write
+          - paragraph [ref=e3984]: "NOTE: Always read from primary for\\ncritical consistency checks like\\npayment confirmations"
+      - separator [ref=e3985]
+      - heading "Quorum and Consensus" [level=2] [ref=e3986]
+      - paragraph [ref=e3987]:
+        - text: In a distributed system with N replicas, operations require agreement from a
+        - strong [ref=e3988]: quorum
+        - text: — typically a majority of nodes. For writes requiring acknowledgement from W nodes and reads querying R nodes, if W + R > N, at least one node seen by a read must have participated in the last write, guaranteeing the latest data is always seen. Consensus algorithms like
+        - strong [ref=e3989]: Raft
+        - text: solve the harder problem of getting distributed nodes to agree on a sequence of values even when nodes fail. Raft elects a leader by timeout, the leader appends entries to its log and replicates to followers, and commits once a majority acknowledges.
+      - document [ref=e3991]:
+        - generic [ref=e3994]:
+          - generic [ref=e3995]:
+            - generic [ref=e4002]: Raft Consensus
+            - generic [ref=e4006]:
+              - paragraph [ref=e4013]: "Leader: accepts writes\\nappends to log"
+              - paragraph [ref=e4020]: Follower 1
+              - paragraph [ref=e4027]: Follower 2
+              - paragraph [ref=e4034]: Follower 3
+              - paragraph [ref=e4041]: Committed when majority ACK
+              - paragraph [ref=e4048]: Respond to client
+              - paragraph [ref=e4055]: Leader timeout
+              - paragraph [ref=e4062]: "Election: follower with\\nmost complete log wins"
+          - generic [ref=e4063]:
+            - generic [ref=e4070]: Quorum (N=5, W=3, R=3)
+            - generic [ref=e4074]:
+              - paragraph [ref=e4081]: "Write: must reach 3 of 5 nodes"
+              - paragraph [ref=e4088]: Node 1 ACK
+              - paragraph [ref=e4095]: Node 2 ACK
+              - paragraph [ref=e4102]: Node 3 ACK
+              - paragraph [ref=e4109]: Node 4 no ACK needed
+              - paragraph [ref=e4116]: Node 5 no ACK needed
+          - paragraph [ref=e4123]: W + R = 6 greater than N = 5\nAt least 1 overlap guaranteed\nReads always see latest write
+          - paragraph [ref=e4130]: "NOTE: Lower W means faster writes\\nbut less durability tune based on\\nyour consistency requirements"
+      - separator [ref=e4131]
+      - heading "CAP Theorem and BASE vs ACID" [level=2] [ref=e4132]
+      - paragraph [ref=e4133]:
+        - text: "CAP states a distributed system guarantees at most two of:"
+        - strong [ref=e4134]: Consistency
+        - text: (every read sees the most recent write),
+        - strong [ref=e4135]: Availability
+        - text: (every request receives a response), and
+        - strong [ref=e4136]: Partition tolerance
+        - text: (operation continues during network splits). Since network partitions will occur, you are really choosing between C and A during a partition. ACID — Atomicity, Consistency, Isolation, Durability — describes traditional database guarantees. BASE — Basically Available, Soft state, Eventually consistent — describes many distributed and NoSQL systems that trade ACID's hard guarantees for higher availability and performance.
+      - document [ref=e4138]:
+        - generic [ref=e4140]:
+          - generic [ref=e4144]:
+            - generic [ref=e4150]: Consistency
+            - generic [ref=e4156]: Availability
+          - generic [ref=e4157]:
+            - generic [ref=e4158]:
+              - generic [ref=e4165]: CAP Triangle
+              - generic [ref=e4170]:
+                - paragraph [ref=e4177]: Consistency\nevery read = latest write
+                - paragraph [ref=e4184]: Availability\nevery request gets a response
+                - paragraph [ref=e4191]: Partition Tolerance\nworks during network splits
+            - paragraph [ref=e4198]: Real distributed systems must handle partitions
+            - paragraph [ref=e4205]: "During partition\\nchoose:"
+            - paragraph [ref=e4212]: Refuse requests\nthat cannot reach quorum
+            - paragraph [ref=e4219]: Serve possibly stale data\nreturn best available answer
+            - paragraph [ref=e4226]: "ACID: Atomicity, Consistency\\nIsolation, Durability\\nStrong guarantees, harder to scale"
+            - paragraph [ref=e4233]: PostgreSQL, MySQL
+            - paragraph [ref=e4240]: "BASE: Basically Available\\nSoft state, Eventually consistent\\nScale easily, weaker guarantees"
+            - paragraph [ref=e4247]: Cassandra, DynamoDB, CouchDB
+            - paragraph [ref=e4254]: "NOTE: PACELC extends CAP:\\neven without partitions there is a\\nlatency vs consistency tradeoff"
+      - separator [ref=e4255]
+      - heading "MVCC and Snapshot Isolation" [level=2] [ref=e4256]
+      - paragraph [ref=e4257]:
+        - text: MVCC (Multi-Version Concurrency Control) eliminates the reader-writer blocking problem by storing
+        - strong [ref=e4258]: multiple versions
+        - text: "of each row. Writers create new versions without overwriting old ones. Readers see the version that was current at their transaction's start time — effectively a snapshot of the database. This is how PostgreSQL achieves excellent read throughput under write load: readers never block writers and vice versa. Snapshot Isolation prevents dirty reads and non-repeatable reads but allows"
+        - strong [ref=e4259]: write skew
+        - text: — two transactions each check a condition, both find it satisfied, and together their writes violate it. Serializable Snapshot Isolation (SSI) detects write skew at commit time.
+      - document [ref=e4261]:
+        - generic [ref=e4263]:
+          - generic [ref=e4270]: Row Versions in MVCC
+          - generic [ref=e4276]:
+            - paragraph [ref=e4283]: "version 1: salary=50000 txn_id=100 deleted=null"
+            - paragraph [ref=e4290]: "version 2: salary=60000 txn_id=150 deleted=null"
+            - paragraph [ref=e4297]: "version 3: salary=70000 txn_id=200 deleted=null"
+            - paragraph [ref=e4304]: Transaction started at txn_id=120\nsees version 1 only (V2 created after start)
+            - paragraph [ref=e4311]: Transaction started at txn_id=160\nsees version 2 only
+            - paragraph [ref=e4318]: Current transaction\nsees version 3
+            - paragraph [ref=e4325]: Autovacuum cleans old versions\nno longer visible to any active transaction
+            - paragraph [ref=e4332]: "NOTE: Long-running transactions prevent\\nvacuum from cleaning old versions causes table bloat\\nThis is why idle transactions are dangerous"
+      - separator [ref=e4333]
+      - heading "Two-Phase Commit and Three-Phase Commit" [level=2] [ref=e4334]
+      - paragraph [ref=e4335]:
+        - text: "Two-Phase Commit (2PC) coordinates an atomic transaction across multiple nodes. Phase one: the coordinator asks all participants if they can commit. Each durably logs its vote. Phase two: if all voted yes, the coordinator logs a commit decision and tells everyone to commit. The critical problem: if the coordinator crashes after participants voted yes but before it sends the final decision, participants are stuck — they cannot commit or abort without the coordinator. This"
+        - strong [ref=e4336]: blocking problem
+        - text: persists until the coordinator recovers. Three-Phase Commit adds a pre-commit phase to reduce this window, but 3PC assumes synchronous networks and fails under network partitions.
+      - document [ref=e4338]:
+        - generic [ref=e4341]: Participant 2
+        - generic [ref=e4344]: Participant 1
+        - generic [ref=e4347]: Coordinator
+        - generic [ref=e4351]: Participant 2
+        - generic [ref=e4355]: Participant 1
+        - generic [ref=e4359]: Coordinator
+        - generic [ref=e4362]: Phase 1 PREPARE
+        - generic [ref=e4365]: Phase 2 COMMIT
+        - generic [ref=e4368]: "BLOCKING PROBLEM: if coordinator crashes\\nafter participants vote YES but before\\nsending COMMIT decision, participants\\nare stuck waiting forever"
+        - generic [ref=e4369]: prepare?
+        - generic [ref=e4370]: prepare?
+        - generic [ref=e4371]: yes (durably logged)
+        - generic [ref=e4372]: yes (durably logged)
+        - generic [ref=e4373]: log COMMIT decision
+        - generic [ref=e4375]: commit
+        - generic [ref=e4376]: commit
+        - generic [ref=e4377]: ack
+        - generic [ref=e4378]: ack
+      - separator [ref=e4379]
+      - heading "WAL, Checkpointing, and Compaction" [level=2] [ref=e4380]
+      - paragraph [ref=e4381]: "Write-Ahead Logging ensures durability: before any data page is modified on disk, a log record describing the change is written to the WAL. Only after the log record is durably on disk is the change considered committed. On crash, the database replays the WAL from the last checkpoint to recover committed changes not yet in data files, and rolls back uncommitted ones. A checkpoint is the point in the WAL at which all modified pages before it have been flushed to disk, bounding recovery time. Compaction, relevant to LSM-tree engines, merges accumulated sorted files (SSTables), discards deleted and overwritten values, and reduces the number of files that reads must scan."
+      - document [ref=e4383]:
+        - generic [ref=e4389]:
+          - generic [ref=e4390]:
+            - generic [ref=e4397]: Write-Ahead Log Flow
+            - generic [ref=e4401]:
+              - paragraph [ref=e4408]: Application write
+              - paragraph [ref=e4415]: Write log record to WAL\nfdatasync durable
+              - paragraph [ref=e4422]: "ACK to client: committed"
+              - paragraph [ref=e4429]: Data page updated later\nin background
+          - paragraph [ref=e4436]: System crash
+          - paragraph [ref=e4443]: "On restart: replay WAL\\nfrom last checkpoint"
+          - paragraph [ref=e4450]: REDO committed changes\nnot yet in data files
+          - paragraph [ref=e4457]: UNDO uncommitted changes\nincomplete transactions
+          - paragraph [ref=e4464]: "Checkpoint: flush all dirty pages to disk\\nTruncate WAL before checkpoint point"
+          - paragraph [ref=e4471]: Shorter WAL to replay on crash
+          - paragraph [ref=e4478]: "Compaction: merge SSTables\\ndiscard tombstones and old versions"
+          - paragraph [ref=e4485]: Fewer files to scan on read\nsmaller storage footprint
+          - paragraph [ref=e4492]: "NOTE: PostgreSQL checkpoint_completion_target\\nspreads checkpoint IO over time\\nto avoid IO spikes"
+      - separator [ref=e4493]
+      - heading "Bloom Filter and LSM Tree vs B-Tree" [level=2] [ref=e4494]
+      - paragraph [ref=e4495]: "A Bloom filter answers set-membership queries with no false negatives but configurable false positives. Internally it is a bit array with multiple hash functions: to add, hash the element and set those bit positions; to query, check if all positions are set. If any position is zero the element is definitely absent. Cassandra uses Bloom filters to avoid checking SSTables that cannot contain a queried key. LSM trees optimise for writes: writes go to an in-memory memtable, flushed to immutable sorted SSTables on disk. Compaction merges SSTables. B-trees modify pages in place, making random reads fast but writes expensive due to scattered page updates."
+      - document [ref=e4497]:
+        - generic [ref=e4500]:
+          - generic [ref=e4501]:
+            - generic [ref=e4508]: B-Tree Write Path
+            - generic [ref=e4509]:
+              - paragraph [ref=e4516]: Find and lock data page
+              - paragraph [ref=e4523]: Modify page in place
+              - paragraph [ref=e4530]: Write WAL record
+              - paragraph [ref=e4537]: Write modified page back to disk
+          - generic [ref=e4538]:
+            - generic [ref=e4545]: LSM Tree Write Path
+            - generic [ref=e4546]:
+              - paragraph [ref=e4553]: MemTable in RAM\nsorted, mutable
+              - paragraph [ref=e4560]: Flush to SSTable on disk\nimmutable sorted file
+              - paragraph [ref=e4567]: Level 0 SSTables
+              - paragraph [ref=e4574]: Compaction merges into\nLevel 1, 2, 3 fewer larger files
+          - generic [ref=e4575]:
+            - generic [ref=e4582]: Bloom Filter
+            - generic [ref=e4584]:
+              - paragraph [ref=e4591]: "Bit array: 0 0 0 0 0 0 0 0"
+              - paragraph [ref=e4598]: "add('apple'): set positions 2,5,7"
+              - paragraph [ref=e4605]: "query('banana'): check positions 1,4,6\\nposition 1 = 0 DEFINITELY NOT in set"
+              - paragraph [ref=e4612]: Skip SSTable entirely
+          - paragraph [ref=e4619]: "NOTE: LSM excels for write-heavy workloads\\nB-tree excels for read-heavy with random lookups\\nChoose engine based on your workload"
+      - separator [ref=e4620]
+      - heading "Query Planner and Cost-Based Optimizer" [level=2] [ref=e4621]
+      - paragraph [ref=e4622]:
+        - text: The query planner parses your SQL and generates an execution plan. The
+        - strong [ref=e4623]: cost-based optimiser
+        - text: "evaluates multiple candidate plans and selects the cheapest, estimating cost from table statistics: row counts, column cardinality, value distribution histograms, and correlation. For a join the optimiser chooses between nested-loop join (good for small tables), hash join (good for large unsorted inputs), and merge join (good for pre-sorted inputs). With N tables there are N! possible join orders — optimisers use dynamic programming or greedy heuristics to explore the search space. A large discrepancy between estimated and actual rows in"
+        - code [ref=e4624]: EXPLAIN ANALYZE
+        - text: signals stale statistics — run
+        - code [ref=e4625]: ANALYZE
+        - text: to refresh.
+      - document [ref=e4627]:
+        - generic [ref=e4635]:
+          - generic [ref=e4636]:
+            - generic [ref=e4643]: Plans
+            - generic [ref=e4644]:
+              - paragraph [ref=e4651]: "Plan A: Seq Scan users Hash Join orders\\ncost estimate: 5000"
+              - paragraph [ref=e4658]: "Plan B: Index Scan users by country Nested Loop\\ncost estimate: 120"
+              - paragraph [ref=e4665]: "Plan C: Seq Scan orders Hash Join users\\ncost estimate: 8000"
+          - paragraph [ref=e4672]: SELECT * FROM orders o JOIN users u ON o.user_id = u.id WHERE u.country = 'IN'
+          - paragraph [ref=e4679]: Parse into AST
+          - paragraph [ref=e4686]: Gather table statistics:\nrow counts, histograms, indexes
+          - paragraph [ref=e4693]: Generate candidate plans
+          - paragraph [ref=e4700]: Cost-based optimiser selects Plan B
+          - paragraph [ref=e4707]: Execute Plan B
+          - paragraph [ref=e4714]: "Stale statistics: estimated 10 rows\\nactual 100000 rows"
+          - paragraph [ref=e4721]: Wrong plan chosen nested loop\nbecomes catastrophically slow
+          - paragraph [ref=e4728]: Run ANALYZE to refresh statistics
+          - paragraph [ref=e4735]: "NOTE: EXPLAIN ANALYZE is your debugging tool\\nCheck estimated vs actual rows large gaps mean stale stats"
+      - separator [ref=e4736]
+      - heading "Deadlock and Lock Types" [level=2] [ref=e4737]
+      - paragraph [ref=e4738]:
+        - text: A deadlock occurs when transaction A holds a lock transaction B needs and vice versa — both wait forever. Databases detect deadlocks using a
+        - strong [ref=e4739]: wait-for graph
+        - text: ": a cycle means deadlock. One transaction is chosen as victim and killed, allowing others to proceed. Prevention: always acquire locks in a consistent order across all transactions; keep transactions short; prefer MVCC to avoid locking entirely where possible. Lock escalation replaces many fine-grained row locks with a coarser table lock when the number of locks exceeds a threshold."
+        - strong [ref=e4740]: Optimistic locking
+        - text: (version columns) acquires no locks and validates at commit.
+        - strong [ref=e4741]: Pessimistic locking
+        - text: (
+        - code [ref=e4742]: SELECT FOR UPDATE
+        - text: ) holds locks during the transaction.
+      - document [ref=e4744]:
+        - generic [ref=e4748]:
+          - generic [ref=e4749]:
+            - generic [ref=e4756]: LOCK_TYPES
+            - generic [ref=e4758]:
+              - paragraph [ref=e4765]: "Optimistic: no lock\\ncheck version at commit\\nfail if changed"
+              - paragraph [ref=e4772]: Best for low contention
+              - paragraph [ref=e4779]: "Pessimistic: SELECT FOR UPDATE\\nblock all concurrent writes"
+              - paragraph [ref=e4786]: Best when conflict is expected
+          - generic [ref=e4787]:
+            - generic [ref=e4794]: Deadlock Scenario
+            - generic [ref=e4798]:
+              - generic [ref=e4804]: waits
+              - generic [ref=e4810]: waits
+            - generic [ref=e4811]:
+              - paragraph [ref=e4818]: Transaction A holds lock on Row 1\nwaits for Row 2
+              - paragraph [ref=e4825]: Transaction B holds lock on Row 2\nwaits for Row 1
+              - paragraph [ref=e4832]: CYCLE DETECTED DEADLOCK
+          - paragraph [ref=e4839]: Database detects cycle in wait-for graph
+          - paragraph [ref=e4846]: Choose victim transaction\ntypically one with fewest resources used
+          - paragraph [ref=e4853]: Victim rolled back\nError returned to application
+          - paragraph [ref=e4860]: Application MUST catch and retry
+          - paragraph [ref=e4867]: "NOTE: Always acquire locks in consistent\\nalpha or PK order to prevent deadlock cycles"
+      - separator [ref=e4868]
+      - heading "Isolation Anomalies" [level=2] [ref=e4869]
+      - paragraph [ref=e4870]:
+        - text: SQL defines four isolation levels, each preventing a subset of anomalies.
+        - strong [ref=e4871]: Dirty read
+        - text: ": reading uncommitted data that may be rolled back."
+        - strong [ref=e4872]: Non-repeatable read
+        - text: ": the same row returns different values within one transaction because another committed a change."
+        - strong [ref=e4873]: Phantom read
+        - text: ": a range query returns different rows on re-execution because another transaction inserted or deleted matching rows."
+        - strong [ref=e4874]: Read skew
+        - text: ": reading two related rows that form an inconsistent snapshot — prevented by Snapshot Isolation."
+        - strong [ref=e4875]: Write skew
+        - text: ": two transactions each read a shared condition, decide to write based on it, and together violate the invariant — prevented only by Serializable."
+      - document [ref=e4877]:
+        - generic [ref=e4879]:
+          - generic [ref=e4885]:
+            - generic [ref=e4886]: Isolation Level vs Anomaly
+            - generic [ref=e4887]: Prevention
+          - generic [ref=e4898]:
+            - paragraph [ref=e4905]: Read Committed\nSELECT sees only committed rows
+            - paragraph [ref=e4912]: Repeatable Read\nrow values stable within transaction
+            - paragraph [ref=e4919]: Snapshot Isolation\nconsistent snapshot at start time
+            - paragraph [ref=e4926]: Serializable\nexecution equivalent to serial
+            - paragraph [ref=e4933]: "Dirty Read: read uncommitted data"
+            - paragraph [ref=e4940]: "Non-Repeatable Read: row changes mid-txn"
+            - paragraph [ref=e4947]: "Phantom Read: new rows appear mid-txn"
+            - paragraph [ref=e4954]: "Read Skew: inconsistent snapshot"
+            - paragraph [ref=e4961]: "Write Skew: both check condition\\nboth write and together violate it"
+            - paragraph [ref=e4968]: "Write Skew example: 2 doctors check\\nat least 2 on-call? both see YES\\nboth mark themselves off-call\\nresult: 0 doctors on-call WRONG"
+            - paragraph [ref=e4975]: "NOTE: Most databases default to Read Committed\\nPostgreSQL SERIALIZABLE uses SSI to detect\\nwrite skew with low overhead"
+      - separator [ref=e4976]
+      - heading "Backpressure, Circuit Breaker, and Rate Limiting" [level=2] [ref=e4977]
+      - paragraph [ref=e4978]:
+        - text: Backpressure is a flow-control signal from a downstream component telling an upstream to slow down production. Instead of dropping data or crashing, the upstream pauses until downstream catches up. Reactive Streams builds backpressure into the protocol between publisher and subscriber. A
+        - strong [ref=e4979]: circuit breaker
+        - text: "has three states: Closed (requests pass through), Open (requests fail fast after too many failures — no call attempted), and Half-Open (a probe request tests if downstream has recovered). This prevents cascading failures. Rate limiting restricts how many requests a specific client can make in a window. Throttling limits how many requests the service processes globally, protecting it from overload."
+      - document [ref=e4981]:
+        - generic [ref=e4983]:
+          - generic [ref=e5000]:
+            - generic [ref=e5006]: normal operation
+            - generic [ref=e5011]:
+              - generic [ref=e5012]: failure threshold
+              - generic [ref=e5013]: exceeded\ne.g. 50% errors
+              - generic [ref=e5014]: in 10s window
+            - generic [ref=e5019]:
+              - generic [ref=e5020]: timeout elapsed\nprobe
+              - generic [ref=e5021]: downstream
+            - generic [ref=e5026]:
+              - generic [ref=e5027]: probe
+              - generic [ref=e5028]: succeeds\ndownstream
+              - generic [ref=e5029]: recovered
+            - generic [ref=e5035]: probe fails\nstill not ready
+          - generic [ref=e5036]:
+            - paragraph [ref=e5047]: Closed
+            - paragraph [ref=e5056]: Open
+            - paragraph [ref=e5065]: HalfOpen
+            - paragraph [ref=e5074]: Requests pass through\nfailures counted
+            - paragraph [ref=e5083]: Requests FAIL FAST\nno network call made\nprotects downstream
+            - paragraph [ref=e5092]: One request let through\nas recovery probe
+      - separator [ref=e5093]
+      - heading "CDC, Consistent Hashing, and Partitioning" [level=2] [ref=e5094]
+      - paragraph [ref=e5095]:
+        - text: Change Data Capture (CDC) reads the database WAL to produce a real-time stream of every insert, update, and delete as events, enabling real-time integration, cache invalidation, and event sourcing. Debezium is the leading open-source CDC tool.
+        - strong [ref=e5096]: Consistent hashing
+        - text: places both data items and nodes on a hash ring; adding or removing a node only moves data from adjacent positions, minimising redistribution. This is why Cassandra and DynamoDB can add nodes without reshuffling all data. Hash partitioning distributes rows uniformly but loses range scan ability. Range partitioning enables range scans but risks hot partitions when all writes go to the current time-range shard.
+      - document [ref=e5098]:
+        - generic [ref=e5101]:
+          - generic [ref=e5102]:
+            - generic [ref=e5109]: Consistent Hashing Ring
+            - generic [ref=e5114]:
+              - paragraph [ref=e5121]: Hash Ring\n0 to 2^32
+              - paragraph [ref=e5128]: Node A\nangle 0
+              - paragraph [ref=e5135]: Node B\nangle 120
+              - paragraph [ref=e5142]: Node C\nangle 240
+              - paragraph [ref=e5149]: Add Node D at 60 degrees:\nonly data between 0 and 60\nmoves from Node B to Node D
+          - generic [ref=e5150]:
+            - generic [ref=e5157]: CDC Pipeline
+            - generic [ref=e5161]:
+              - paragraph [ref=e5168]: PostgreSQL\nWAL
+              - paragraph [ref=e5175]: Debezium connector\nreads WAL
+              - paragraph [ref=e5182]: Kafka topic:\nrow-level change events
+              - paragraph [ref=e5189]: Cache invalidation service
+              - paragraph [ref=e5196]: Elasticsearch indexer
+              - paragraph [ref=e5203]: Analytics pipeline
+          - paragraph [ref=e5210]: "NOTE: Virtual nodes vnodes in Cassandra\\ngive each physical node multiple\\nring positions for even data distribution"
+      - separator [ref=e5211]
+      - heading "Idempotency and Exactly-Once Semantics" [level=2] [ref=e5212]
+      - paragraph [ref=e5213]:
+        - text: An
+        - strong [ref=e5214]: idempotent
+        - text: operation produces the same result whether executed once or many times.
+        - code [ref=e5215]: PUT
+        - text: with a full resource is idempotent;
+        - code [ref=e5216]: POST
+        - text: to create is not. Idempotency is essential in distributed systems where retries are necessary — a timeout does not tell you if the server received your request. With idempotent operations you can safely retry.
+        - strong [ref=e5217]: Exactly-once semantics
+        - text: "guarantees a message is processed exactly once, neither lost nor duplicated. Kafka achieves this within the Kafka ecosystem: idempotent producers use sequence numbers to detect and discard duplicates, transactional producers atomically write across partitions, and consumer offset management is atomically committed with processing results."
+      - document [ref=e5219]:
+        - generic [ref=e5221]:
+          - generic [ref=e5227]:
+            - generic [ref=e5233]: found
+            - generic [ref=e5239]: not found
+          - generic [ref=e5240]:
+            - generic [ref=e5241]:
+              - generic [ref=e5248]: Kafka Exactly-Once
+              - generic [ref=e5249]:
+                - paragraph [ref=e5256]: Idempotent Producer\nsequence numbers detect duplicates
+                - paragraph [ref=e5263]: Kafka Topic
+                - paragraph [ref=e5270]: Consumer reads and processes
+                - paragraph [ref=e5277]: Commit result to DB AND\noffset to Kafka in one transaction
+            - paragraph [ref=e5284]: Client sends payment request\nwith idempotency key = uuid-1234
+            - paragraph [ref=e5291]: Server processes payment
+            - paragraph [ref=e5298]: Store result with idempotency key
+            - paragraph [ref=e5305]: Network timeout client unsure
+            - paragraph [ref=e5312]: Client retries with SAME uuid-1234
+            - paragraph [ref=e5319]: Server checks idempotency key store
+            - paragraph [ref=e5326]: Return cached result\nDO NOT process again
+            - paragraph [ref=e5333]: Process and store result
+            - paragraph [ref=e5340]: "NOTE: External writes beyond Kafka\\nrequire the external system to be idempotent\\nTrue exactly-once is system-wide not just Kafka"
+      - separator [ref=e5341]
+      - heading "🖥️ Part 3 — Frontend Engineering" [level=1] [ref=e5342]
+      - separator [ref=e5343]
+      - heading "Hydration and Islands Architecture" [level=2] [ref=e5344]
+      - paragraph [ref=e5345]:
+        - text: When a server renders HTML and sends it to the browser, the page looks correct but is inert — no event handlers are attached.
+        - strong [ref=e5346]: Hydration
+        - text: is the process of attaching JavaScript event handlers and state to the already-existing server-rendered DOM. React walks the HTML, matches it against the component tree, and adopts the existing DOM nodes rather than recreating them. Full hydration requires shipping all component code to the client regardless of interactivity.
+        - strong [ref=e5347]: Partial hydration
+        - text: hydrates only interactive parts.
+        - strong [ref=e5348]: Islands architecture
+        - text: "formalises this: the page is mostly static HTML with isolated islands of interactivity, each hydrated independently and lazily. Astro popularised this pattern — static regions have zero JavaScript cost."
+      - document [ref=e5350]:
+        - generic [ref=e5354]:
+          - generic [ref=e5355]:
+            - generic [ref=e5362]: Islands Architecture
+            - generic [ref=e5363]:
+              - paragraph [ref=e5370]: Static Header HTML zero JS
+              - paragraph [ref=e5377]: Interactive Nav Island\nhydrate lazily
+              - paragraph [ref=e5384]: Static Content HTML zero JS
+              - paragraph [ref=e5391]: Interactive Carousel Island\nhydrate on scroll-in
+              - paragraph [ref=e5398]: Static Footer HTML zero JS
+          - paragraph [ref=e5405]: Server renders full HTML
+          - paragraph [ref=e5412]: Browser receives HTML\npage looks rendered
+          - paragraph [ref=e5419]: But page is INERT\nno event handlers attached
+          - paragraph [ref=e5426]: "JavaScript executes\\nHydration: adopt existing DOM nodes\\nattach event handlers"
+          - paragraph [ref=e5433]: Page becomes interactive
+          - paragraph [ref=e5440]: "NOTE: Full hydration ships ALL JS to client\\nIslands architecture ships only JS\\nfor interactive components dramatic savings"
+      - separator [ref=e5441]
+      - heading "Streaming SSR and Concurrent Rendering" [level=2] [ref=e5442]
+      - paragraph [ref=e5443]:
+        - text: Traditional SSR generates the complete HTML string on the server and sends it all at once — the browser waits for the entire response before it can start rendering.
+        - strong [ref=e5444]: Streaming SSR
+        - text: sends HTML to the browser incrementally as it is generated. React 18's
+        - code [ref=e5445]: renderToPipeableStream
+        - text: "supports streaming with Suspense: the server sends a placeholder for suspended components, then flushes the actual content as it becomes available via an inline script swap."
+        - strong [ref=e5446]: Concurrent rendering
+        - text: lets React interrupt, pause, abandon, and restart render work. When a higher-priority update arrives mid-render, React can abandon the current render, handle the urgent update first, and resume the background render — previously impossible.
+      - document [ref=e5448]:
+        - generic [ref=e5451]: Browser
+        - generic [ref=e5454]: Server
+        - generic [ref=e5458]: Browser
+        - generic [ref=e5462]: Server
+        - generic [ref=e5465]: User sees content progressively\nnot all-at-once after full generation
+        - generic [ref=e5468]: "Concurrent Rendering: React can\\nabandon mid-render if higher priority\\nupdate arrives e.g. user typed"
+        - generic [ref=e5469]: send HTML head and critical content (immediate)
+        - generic [ref=e5470]: parse and render available HTML
+        - generic [ref=e5472]: stream more HTML as components resolve
+        - generic [ref=e5473]: incrementally render page builds up
+        - generic [ref=e5475]: flush deferred Suspense content via script
+        - generic [ref=e5476]: swap placeholders for real content
+      - separator [ref=e5478]
+      - heading "React Fiber Architecture and Reconciliation" [level=2] [ref=e5479]
+      - paragraph [ref=e5480]:
+        - text: The
+        - strong [ref=e5481]: Fiber
+        - text: reimplementation (React 16) makes concurrent rendering possible. A fiber is a JavaScript object representing a unit of work — a node in a work-in-progress tree corresponding to a React element. Each fiber tracks component type, props, state, effects (what needs changing in the DOM), and pointers to parent, child, and sibling fibers. This explicit linked structure means React can traverse and interrupt work incrementally. The
+        - strong [ref=e5482]: render phase
+        - text: builds a work-in-progress fiber tree (interruptible). The
+        - strong [ref=e5483]: commit phase
+        - text: applies effects to the DOM synchronously (non-interruptible). Reconciliation diffs two fiber trees using type-based heuristics and key matching to find the minimal set of DOM changes.
+      - document [ref=e5485]:
+        - generic [ref=e5487]:
+          - generic [ref=e5493]:
+            - generic [ref=e5499]: "YES"
+            - generic [ref=e5505]: "NO"
+          - generic [ref=e5506]:
+            - generic [ref=e5507]:
+              - generic [ref=e5514]: Fiber Tree Work In Progress
+              - generic [ref=e5520]:
+                - paragraph [ref=e5527]: Root Fiber
+                - paragraph [ref=e5534]: App Fiber
+                - paragraph [ref=e5541]: Header Fiber
+                - paragraph [ref=e5548]: Main Fiber
+                - paragraph [ref=e5555]: List Fiber
+                - paragraph [ref=e5562]: Item Fiber 1
+                - paragraph [ref=e5569]: Item Fiber 2
+            - paragraph [ref=e5576]: Render Phase INTERRUPTIBLE
+            - paragraph [ref=e5583]: Build work-in-progress fiber tree\ncompare with current tree
+            - paragraph [ref=e5590]: Element type same?
+            - paragraph [ref=e5597]: Reuse DOM node\nupdate props only
+            - paragraph [ref=e5604]: Unmount old\nmount new subtree
+            - paragraph [ref=e5611]: Commit Phase SYNCHRONOUS\ncannot be interrupted
+            - paragraph [ref=e5618]: Apply all effects to real DOM\ninsertions, updates, deletions
+            - paragraph [ref=e5625]: "NOTE: Keys let React match elements\\nacross renders stable data IDs\\nnot array indexes prevent unnecessary unmounts"
+      - separator [ref=e5626]
+      - heading "Virtual DOM, Structural Sharing, and Immutability" [level=2] [ref=e5627]
+      - paragraph [ref=e5628]:
+        - text: "The virtual DOM is an in-memory tree representation. React diffs it against the previous version to find real DOM changes. Naive tree diffing is O(n³). React achieves O(n) with two heuristics: elements of different types produce completely different trees, and keys identify elements across renders."
+        - strong [ref=e5629]: Structural sharing
+        - text: "makes immutability efficient: a modified data structure shares unchanged subtrees with the original rather than deep-copying. Combined with referential equality checks ("
+        - code [ref=e5630]: newState === oldState
+        - text: ), this lets
+        - code [ref=e5631]: React.memo
+        - text: and
+        - code [ref=e5632]: PureComponent
+        - text: skip re-renders cheaply when data provably has not changed.
+      - document [ref=e5634]:
+        - generic [ref=e5640]:
+          - generic [ref=e5641]:
+            - generic [ref=e5647]:
+              - generic [ref=e5648]: Next Virtual DOM after
+              - generic [ref=e5649]: reorder
+            - generic [ref=e5653]:
+              - paragraph [ref=e5660]: ul
+              - paragraph [ref=e5667]: li key=3 Carol
+              - paragraph [ref=e5674]: li key=1 Alice
+              - paragraph [ref=e5681]: li key=2 Bob
+          - generic [ref=e5682]:
+            - generic [ref=e5689]: Previous Virtual DOM
+            - generic [ref=e5693]:
+              - paragraph [ref=e5700]: ul
+              - paragraph [ref=e5707]: li key=1 Alice
+              - paragraph [ref=e5714]: li key=2 Bob
+              - paragraph [ref=e5721]: li key=3 Carol
+          - paragraph [ref=e5728]: Reconciler diffs with keys
+          - paragraph [ref=e5735]: Moves DOM nodes\nno unmount no remount\nO(n) with keys
+          - paragraph [ref=e5742]: "Without keys: reconciler compares by position\\nDifferent text 3 textContent updates\\nInefficient for large lists"
+          - paragraph [ref=e5749]: Unnecessary DOM work
+          - paragraph [ref=e5756]: "NOTE: Use stable data IDs as keys\\nnever array indexes for lists that\\ncan be reordered or filtered"
+      - separator [ref=e5757]
+      - heading "Memoization, Stale Closures, and Referential Equality" [level=2] [ref=e5758]
+      - paragraph [ref=e5759]:
+        - code [ref=e5760]: React.memo
+        - text: and
+        - code [ref=e5761]: PureComponent
+        - text: compare props by referential equality. Passing a new object or function literal on every render bypasses memoization —
+        - code [ref=e5762]: "{a:1} !== {a:1}"
+        - text: .
+        - code [ref=e5763]: useMemo
+        - text: returns a stable computed value when dependencies are unchanged.
+        - code [ref=e5764]: useCallback
+        - text: "returns a stable function reference. The pitfalls: over-memoizing adds overhead without benefit for cheap computations; incorrect dependency arrays cause"
+        - strong [ref=e5765]: stale closures
+        - text: . A stale closure captures a variable's value at creation time. If a
+        - code [ref=e5766]: useCallback
+        - text: omits a state variable from its dependency array, the callback forever reads the initial value — a subtle bug that appears as a counter that does not count.
+      - document [ref=e5768]:
+        - generic [ref=e5770]:
+          - generic [ref=e5777]:
+            - generic [ref=e5778]: FALSE always, different
+            - generic [ref=e5779]: references
+          - generic [ref=e5780]:
+            - paragraph [ref=e5787]: Component renders
+            - paragraph [ref=e5794]: "Creates new object {x: 1} as prop"
+            - paragraph [ref=e5801]: React.memo child receives prop
+            - paragraph [ref=e5808]: "prevProp === newProp?\\n{x:1} === {x:1}"
+            - paragraph [ref=e5815]: Child re-renders despite same data
+            - paragraph [ref=e5822]: "Fix: useMemo to stabilise reference"
+            - paragraph [ref=e5829]: "const obj = useMemo(() => ({x: 1}), [])"
+            - paragraph [ref=e5836]: Same reference on re-render\nMemo check passes skip re-render
+            - paragraph [ref=e5843]: const [count, setCount] = useState(0)\nconst log = useCallback(() => console.log(count), [])\ncount never updates in callback STALE CLOSURE
+            - paragraph [ref=e5850]: Always logs 0 regardless of actual count
+            - paragraph [ref=e5857]: "Fix: add count to deps array\\nor use setCount(prev => prev + 1) functional update"
+            - paragraph [ref=e5864]: Callback always sees current count
+            - paragraph [ref=e5871]: "NOTE: eslint-plugin-react-hooks\\nenforces correct dependency arrays\\nAlways trust the lint rule"
+      - separator [ref=e5872]
+      - heading "Event Loop — Macro vs Microtasks" [level=2] [ref=e5873]
+      - paragraph [ref=e5874]:
+        - text: JavaScript is single-threaded. The event loop processes one task at a time. A
+        - strong [ref=e5875]: macrotask
+        - text: "queue holds:"
+        - code [ref=e5876]: setTimeout
+        - text: callbacks,
+        - code [ref=e5877]: setInterval
+        - text: callbacks, event handler callbacks, and I/O completions. A
+        - strong [ref=e5878]: microtask
+        - text: "queue holds: Promise"
+        - code [ref=e5879]: .then()
+        - text: callbacks,
+        - code [ref=e5880]: queueMicrotask()
+        - text: ", and"
+        - code [ref=e5881]: MutationObserver
+        - text: callbacks. After each macrotask completes, the engine drains the
+        - strong [ref=e5882]: entire
+        - text: microtask queue before picking the next macrotask. This means Promise resolutions run before the next
+        - code [ref=e5883]: setTimeout
+        - text: ", before the browser repaints, before anything else. A chain of Promises resolving synchronously can delay rendering — starving the UI without appearing as a long task because each individual microtask is short."
+      - document [ref=e5885]:
+        - generic [ref=e5887]:
+          - generic [ref=e5898]:
+            - generic [ref=e5904]: "NO"
+            - generic [ref=e5910]: "YES"
+            - generic [ref=e5916]: "YES"
+            - generic [ref=e5922]: "NO"
+          - generic [ref=e5923]:
+            - paragraph [ref=e5930]: Event Loop Tick
+            - paragraph [ref=e5937]: Pick ONE macrotask from queue\nsetTimeout callback, click handler, etc.
+            - paragraph [ref=e5944]: Execute macrotask to completion
+            - paragraph [ref=e5951]: Microtask queue\nempty?
+            - paragraph [ref=e5958]: Run next microtask\nPromise.then, queueMicrotask
+            - paragraph [ref=e5965]: Browser needs\nto repaint?
+            - paragraph [ref=e5972]: Execute requestAnimationFrame\nStyle Recalc, Layout, Paint
+            - paragraph [ref=e5979]: "NOTE: setTimeout 0 is a macrotask\\nPromise.resolve().then is a microtask\\nMicrotask runs BEFORE next setTimeout\\nEven if setTimeout was registered first"
+      - separator [ref=e5980]
+      - heading "Layout Thrashing and Critical Rendering Path" [level=2] [ref=e5981]
+      - paragraph [ref=e5982]:
+        - strong [ref=e5983]: Layout thrashing
+        - text: occurs when JavaScript reads then writes DOM properties alternately and rapidly. Reading a layout property like
+        - code [ref=e5984]: offsetWidth
+        - text: forces the browser to complete pending style calculations and layout — a forced synchronous layout. If you immediately write to the DOM and then read again, another forced layout occurs. Dozens of these in a loop destroy frame rate. Batch all reads first, then all writes. The
+        - strong [ref=e5985]: critical rendering path
+        - text: "is the sequence for the first pixel: HTML parsing builds the DOM, CSS parsing builds the CSSOM, combining them forms the render tree, layout computes geometry, paint generates pixels, and composite merges GPU layers. CSS is render-blocking. Synchronous scripts are both render-blocking and parser-blocking."
+      - document [ref=e5987]:
+        - generic [ref=e5990]:
+          - generic [ref=e5991]:
+            - generic [ref=e5998]: Critical Rendering Path
+            - generic [ref=e6002]:
+              - paragraph [ref=e6009]: HTML
+              - paragraph [ref=e6016]: DOM Tree
+              - paragraph [ref=e6023]: CSS
+              - paragraph [ref=e6030]: CSSOM Tree
+              - paragraph [ref=e6037]: Render Tree
+              - paragraph [ref=e6044]: Layout\ncompute geometry
+              - paragraph [ref=e6051]: Paint\ngenerate pixels
+              - paragraph [ref=e6058]: Composite\nGPU merge layers
+          - generic [ref=e6059]:
+            - generic [ref=e6065]:
+              - generic [ref=e6066]: Batched reads then writes
+              - generic [ref=e6067]: CORRECT
+            - generic [ref=e6068]:
+              - paragraph [ref=e6075]: read offsetWidth, offsetHeight, scrollTop\none forced layout
+              - paragraph [ref=e6082]: write all style changes\none layout invalidation, resolved next frame
+          - generic [ref=e6083]:
+            - generic [ref=e6090]: Layout Thrashing AVOID
+            - generic [ref=e6091]:
+              - paragraph [ref=e6098]: read offsetWidth forced layout
+              - paragraph [ref=e6105]: write style.width invalidates layout
+              - paragraph [ref=e6112]: read offsetHeight ANOTHER forced layout
+              - paragraph [ref=e6119]: write style.height invalidates again
+              - paragraph [ref=e6126]: 60ms frame becomes 600ms
+          - paragraph [ref=e6133]: "NOTE: async and defer on script tags\\nprevent parser blocking\\nInline critical CSS eliminates blocking CSS request"
+      - separator [ref=e6134]
+      - heading "Tree Shaking and Code Splitting" [level=2] [ref=e6135]
+      - paragraph [ref=e6136]:
+        - strong [ref=e6137]: Tree shaking
+        - text: is the elimination of unused code during bundling. Bundlers like Webpack and Rollup analyse the static ES module import-export graph and exclude any code not reachable from an entry point. This requires ES modules; CommonJS
+        - code [ref=e6138]: require()
+        - text: is dynamic and cannot be statically analysed.
+        - strong [ref=e6139]: Code splitting
+        - text: divides your bundle into chunks loaded on demand. Route-based splitting loads the settings page bundle only when the user navigates there. Dynamic
+        - code [ref=e6140]: import()
+        - text: is the mechanism — it returns a Promise and the bundler automatically creates a separate chunk.
+      - document [ref=e6142]:
+        - generic [ref=e6148]:
+          - generic [ref=e6149]:
+            - generic [ref=e6155]:
+              - generic [ref=e6156]: CommonJS NOT Tree
+              - generic [ref=e6157]: Shakeable
+            - generic [ref=e6158]:
+              - paragraph [ref=e6165]: "utils.js module.exports = {add, subtract, multiply}"
+              - paragraph [ref=e6172]: const utils = require('./utils')\nDynamic bundler cannot know which are used
+              - paragraph [ref=e6179]: Entire utils.js included in bundle\neven unused functions
+          - generic [ref=e6180]:
+            - generic [ref=e6187]: ES Modules Tree Shakeable
+            - generic [ref=e6188]:
+              - paragraph [ref=e6195]: "utils.js exports: add, subtract, multiply"
+              - paragraph [ref=e6202]: "app.js: import {add} from './utils'\\nOnly add is imported"
+              - paragraph [ref=e6209]: Bundle contains ONLY add()\nsubtract and multiply EXCLUDED
+          - paragraph [ref=e6216]: Code Splitting
+          - paragraph [ref=e6223]: "Entry chunk: core app\\nloads on first visit"
+          - paragraph [ref=e6230]: "Route chunk: /settings bundle\\nloads only when user visits /settings"
+          - paragraph [ref=e6237]: import('./heavy-component')\nReturns Promise separate chunk automatically
+          - paragraph [ref=e6244]: "NOTE: Side-effect-free modules marked\\nwith sideEffects: false in package.json\\nenable more aggressive tree shaking"
+      - separator [ref=e6245]
+      - heading "Web Workers vs Service Workers and SharedArrayBuffer" [level=2] [ref=e6246]
+      - paragraph [ref=e6247]:
+        - strong [ref=e6248]: Web Workers
+        - text: are general-purpose background threads for CPU-intensive computation. They cannot touch the DOM but communicate with the main thread via
+        - code [ref=e6249]: postMessage
+        - text: .
+        - strong [ref=e6250]: Service Workers
+        - text: are event-driven proxy servers between your app and the network, intercepting fetch requests, managing caches, enabling offline support, and handling push notifications. They persist across browser sessions and have a lifecycle of
+        - code [ref=e6251]: install
+        - text: ","
+        - code [ref=e6252]: activate
+        - text: ", and"
+        - code [ref=e6253]: fetch
+        - text: events.
+        - strong [ref=e6254]: SharedArrayBuffer
+        - text: enables true shared memory between workers — multiple threads access the same buffer simultaneously.
+        - code [ref=e6255]: Atomics
+        - text: provides synchronisation primitives to coordinate access safely.
+      - document [ref=e6257]:
+        - generic [ref=e6259]:
+          - generic [ref=e6260]:
+            - generic [ref=e6265]:
+              - generic [ref=e6266]: Web Worker background
+              - generic [ref=e6267]: thread
+            - generic [ref=e6273]: Main Thread UI
+          - generic [ref=e6279]:
+            - generic [ref=e6285]: postMessage data
+            - generic [ref=e6291]: postMessage result
+            - generic [ref=e6297]: cache hit
+            - generic [ref=e6303]: cache miss
+          - generic [ref=e6304]:
+            - generic [ref=e6305]:
+              - generic [ref=e6311]:
+                - generic [ref=e6312]: Service Worker network
+                - generic [ref=e6313]: proxy
+              - generic [ref=e6314]:
+                - paragraph [ref=e6321]: Intercepts fetch requests
+                - paragraph [ref=e6328]: Manages cache storage
+                - paragraph [ref=e6335]: Handles push notifications
+            - paragraph [ref=e6342]: User Interface DOM
+            - paragraph [ref=e6349]: JavaScript execution
+            - paragraph [ref=e6356]: CPU-intensive computation\nimage processing, data crunching
+            - paragraph [ref=e6363]: Cannot access DOM\ncannot block UI
+            - paragraph [ref=e6370]: Fetch request
+            - paragraph [ref=e6377]: Serve from cache offline
+            - paragraph [ref=e6384]: Forward to network
+            - paragraph [ref=e6391]: SharedArrayBuffer
+            - paragraph [ref=e6398]: Both threads access same memory\nAtomics prevents race conditions
+            - paragraph [ref=e6405]: "NOTE: SharedArrayBuffer requires\\nCross-Origin-Isolated headers\\nCOOP and COEP for security"
+      - separator [ref=e6406]
+      - heading "Browser Compositing Layers and GPU Acceleration" [level=2] [ref=e6407]
+      - paragraph [ref=e6408]:
+        - text: "The browser renders through four stages:"
+        - strong [ref=e6409]: Style
+        - text: ","
+        - strong [ref=e6410]: Layout
+        - text: (compute geometry and position),
+        - strong [ref=e6411]: Paint
+        - text: (rasterise pixels for each layer), and
+        - strong [ref=e6412]: Composite
+        - text: (merge layers on the GPU). Layout and paint are expensive. Compositing is cheap — the GPU handles it on the compositor thread, independent of the main thread. Promoting an element to its own compositor layer means changes only trigger compositing, skipping layout and paint entirely. This is why animating
+        - code [ref=e6413]: transform
+        - text: and
+        - code [ref=e6414]: opacity
+        - text: is smooth at 60fps even when the main thread is busy. Animating
+        - code [ref=e6415]: width
+        - text: or
+        - code [ref=e6416]: top
+        - text: triggers layout — avoid it for animations.
+        - code [ref=e6417]: CSS containment
+        - text: (
+        - code [ref=e6418]: "contain: layout"
+        - text: ) limits the scope of layout recalculation.
+      - document [ref=e6420]:
+        - generic [ref=e6426]:
+          - generic [ref=e6427]:
+            - generic [ref=e6434]: Rendering Pipeline
+            - generic [ref=e6435]:
+              - paragraph [ref=e6442]: Style\ncompute CSS properties
+              - paragraph [ref=e6449]: Layout\ncompute geometry, positions
+              - paragraph [ref=e6456]: Paint\nrasterise pixels per layer
+              - paragraph [ref=e6463]: Composite\nGPU merges layers and displays
+          - paragraph [ref=e6470]: Animate transform or opacity
+          - paragraph [ref=e6477]: Compositor thread handles\nno layout no paint\nsmooth 60fps
+          - paragraph [ref=e6484]: Animate width or top
+          - paragraph [ref=e6491]: Triggers layout recalc\nthen paint then composite\njanky avoid
+          - paragraph [ref=e6498]: "will-change: transform\\nor transform: translateZ(0)"
+          - paragraph [ref=e6505]: Element promoted\nto own compositor layer
+          - paragraph [ref=e6512]: GPU caches this layer\nchanges are cheap
+          - paragraph [ref=e6519]: "contain: layout"
+          - paragraph [ref=e6526]: Limits layout recalc\nto within this element only\ndoes not propagate outward
+          - paragraph [ref=e6533]: "NOTE: Over-promoting creates too many layers\\neach layer costs GPU memory\\nOnly promote elements that actually animate"
+      - separator [ref=e6534]
+      - heading "Service Worker Lifecycle and Cache Strategies" [level=2] [ref=e6535]
+      - paragraph [ref=e6536]:
+        - text: A Service Worker installs when first registered, waits in the
+        - strong [ref=e6537]: waiting
+        - text: state while tabs using the old worker remain open, then
+        - strong [ref=e6538]: activates
+        - text: "when all old tabs are closed. Common lifecycle traps: new service worker not activating immediately because old tabs are open; forgetting to delete old caches in the"
+        - code [ref=e6539]: activate
+        - text: "event. Cache strategies:"
+        - strong [ref=e6540]: cache-first
+        - text: serves from cache and only goes to network on miss — ideal for versioned static assets.
+        - strong [ref=e6541]: Network-first
+        - text: always tries network and falls back to cache on failure.
+        - strong [ref=e6542]: Stale-while-revalidate
+        - text: serves cached content immediately while fetching an update in the background for next time.
+      - document [ref=e6544]:
+        - generic [ref=e6546]:
+          - generic [ref=e6564]:
+            - generic [ref=e6570]: browser registers SW
+            - generic [ref=e6576]: install event fires
+            - generic [ref=e6582]: caches filled successfully
+            - generic [ref=e6588]: install fails
+            - generic [ref=e6594]: no old SW controlling pages
+            - generic [ref=e6599]:
+              - generic [ref=e6600]: old SW still controls open
+              - generic [ref=e6601]: tabs
+            - generic [ref=e6606]:
+              - generic [ref=e6607]: all old tabs closed\nor
+              - generic [ref=e6608]: skipWaiting called
+            - generic [ref=e6613]:
+              - generic [ref=e6614]: activate event fires\nclean
+              - generic [ref=e6615]: up old caches here
+            - generic [ref=e6620]:
+              - generic [ref=e6621]: handles fetch
+              - generic [ref=e6622]: events\ncontrols all
+              - generic [ref=e6623]: matching pages
+            - generic [ref=e6629]: replaced by newer SW
+          - generic [ref=e6630]:
+            - paragraph [ref=e6641]: Parsed
+            - paragraph [ref=e6650]: Installing
+            - paragraph [ref=e6659]: Installed
+            - paragraph [ref=e6668]: Redundant
+            - paragraph [ref=e6677]: Activating
+            - paragraph [ref=e6686]: Waiting
+            - paragraph [ref=e6695]: Activated
+            - paragraph [ref=e6704]:
+              - text: "Most common confusion point:"
+              - text: new SW registered but not taking effect
+              - text: because old tab is still open
+      - separator [ref=e6709]
+      - heading "CORS, CSP, and Security Primitives" [level=2] [ref=e6710]
+      - paragraph [ref=e6711]:
+        - text: CORS restricts cross-origin resource requests. Simple requests are sent with an
+        - code [ref=e6712]: Origin
+        - text: header; the server must respond with
+        - code [ref=e6713]: Access-Control-Allow-Origin
+        - text: to permit access. Non-simple requests — those with custom headers or non-simple methods — trigger a
+        - strong [ref=e6714]: preflight
+        - text: OPTIONS request first.
+        - strong [ref=e6715]: CSP
+        - text: (Content Security Policy) is a response header declaring permitted sources for scripts, styles, and images.
+        - code [ref=e6716]: script-src 'self'
+        - text: blocks all injected inline scripts, defeating most XSS attacks.
+        - strong [ref=e6717]: Trusted Types
+        - text: "go further: requiring all dangerous DOM sinks like"
+        - code [ref=e6718]: innerHTML
+        - text: to receive a Trusted value created through a defined policy, preventing DOM-based XSS at the browser level.
+      - document [ref=e6720]:
+        - generic [ref=e6723]: external.com
+        - generic [ref=e6726]: api.example.com
+        - generic [ref=e6729]: Browser
+        - generic [ref=e6733]: external.com
+        - generic [ref=e6737]: api.example.com
+        - generic [ref=e6741]: Browser
+        - generic [ref=e6744]: Simple CORS request
+        - generic [ref=e6747]: Preflight for non-simple request
+        - generic [ref=e6750]: "CSP: Content-Security-Policy header\\nscript-src 'self' blocks inline scripts\\nTrusted Types: innerHTML must receive TrustedHTML object"
+        - generic [ref=e6751]: "GET /data (Origin: app.example.com)"
+        - generic [ref=e6752]: "Access-Control-Allow-Origin: app.example.com"
+        - generic [ref=e6753]: Allow origins match
+        - generic [ref=e6755]: OPTIONS /upload (preflight)
+        - generic [ref=e6756]: "Origin, Access-Control-Request-Method: POST"
+        - generic [ref=e6757]: "Access-Control-Request-Headers: Authorization"
+        - generic [ref=e6758]: Access-Control-Allow-Origin, Allow-Methods, Allow-Headers
+        - generic [ref=e6759]: Actual POST request (if preflight passed)
+      - separator [ref=e6760]
+      - heading "Suspense, Selective Hydration, and Server Components" [level=2] [ref=e6761]
+      - paragraph [ref=e6762]:
+        - strong [ref=e6763]: Suspense boundaries
+        - text: wrap parts of the component tree that may suspend — throw a Promise during rendering to signal they are loading. The boundary shows a fallback while children are suspended.
+        - strong [ref=e6764]: Selective hydration
+        - text: (React 18+) allows parts of the page to hydrate as they stream in. If a user clicks an un-hydrated region, React prioritises hydrating that part first — interaction drives hydration priority.
+        - strong [ref=e6765]: React Server Components
+        - text: "never run in the browser: they execute on the server, output a serialised React tree, and have zero client-side JS cost. Client components are regular React components that hydrate. RSC is the next major architectural shift in React."
+      - document [ref=e6767]:
+        - generic [ref=e6771]:
+          - generic [ref=e6772]:
+            - generic [ref=e6778]:
+              - generic [ref=e6779]: Server vs Client
+              - generic [ref=e6780]: Components
+            - generic [ref=e6781]:
+              - paragraph [ref=e6788]: Server Component\nexecutes on server\naccess DB directly\nzero client JS
+              - paragraph [ref=e6795]: Serialised RSC payload\nwire format
+              - paragraph [ref=e6802]: Client Component\nhydrates normally\nevent handlers work
+          - generic [ref=e6803]:
+            - generic [ref=e6809]:
+              - generic [ref=e6810]: Component Tree with
+              - generic [ref=e6811]: Suspense
+            - generic [ref=e6817]:
+              - paragraph [ref=e6824]: App
+              - paragraph [ref=e6831]: Header already hydrated
+              - paragraph [ref=e6838]: Suspense boundary
+              - paragraph [ref=e6845]: SlowDataComponent still loading
+              - paragraph [ref=e6852]: Shows loading spinner
+              - paragraph [ref=e6859]: Suspense boundary
+              - paragraph [ref=e6866]: FastComponent ready
+              - paragraph [ref=e6873]: Hydrated and interactive
+          - paragraph [ref=e6880]: User clicks un-hydrated region
+          - paragraph [ref=e6887]: React prioritises hydrating\nthat region first
+          - paragraph [ref=e6894]: "NOTE: RSC payload is NOT HTML\\nit is a React-specific serialisation\\nthat the client renderer understands"
+      - separator [ref=e6895]
+      - heading "Web Vitals — LCP, CLS, INP, and FID" [level=2] [ref=e6896]
+      - paragraph [ref=e6897]:
+        - strong [ref=e6898]: LCP
+        - text: "(Largest Contentful Paint) measures when the largest visible content element — typically the hero image or main text block — finishes rendering. Target: under 2.5 seconds."
+        - strong [ref=e6899]: CLS
+        - text: "(Cumulative Layout Shift) measures unexpected visual instability — elements moving after apparent page load. An image without reserved dimensions causes content to jump when it loads. Target: below 0.1."
+        - strong [ref=e6900]: FID
+        - text: (First Input Delay) measured delay from first interaction to browser starting to handle it — now superseded by
+        - strong [ref=e6901]: INP
+        - text: "(Interaction to Next Paint), which measures the worst interaction latency across the entire page visit. INP became a Core Web Vital in 2024. Target: under 200ms."
+      - document [ref=e6903]:
+        - generic [ref=e6911]:
+          - paragraph [ref=e6918]: Page loads
+          - paragraph [ref=e6925]: "LCP: largest element renders\\nTarget: under 2.5 seconds"
+          - paragraph [ref=e6932]: "CLS: layout shifts accumulate\\nTarget: below 0.1 score"
+          - paragraph [ref=e6939]: Image loads without height reserved
+          - paragraph [ref=e6946]: Content jumps down layout shift
+          - paragraph [ref=e6953]: High CLS score bad UX
+          - paragraph [ref=e6960]: "Fix: img {aspect-ratio: 16/9}\\nreserve space before image loads"
+          - paragraph [ref=e6967]: Zero shift good CLS
+          - paragraph [ref=e6974]: User interactions throughout visit
+          - paragraph [ref=e6981]: "INP: worst interaction measured\\nfrom input to next paint\\nTarget: under 200ms"
+          - paragraph [ref=e6988]: Long JavaScript task blocks main thread\n500ms task means 500ms INP on that click
+          - paragraph [ref=e6995]: High INP sluggish page
+          - paragraph [ref=e7002]: Break long tasks into smaller chunks\nuse scheduler.yield between tasks
+          - paragraph [ref=e7009]: Each task under 50ms responsive
+          - paragraph [ref=e7016]: "NOTE: INP replaced FID as Core Web Vital in March 2024\\nFID only measured the first interaction\\nINP measures ALL interactions much harder to optimise"
+      - separator [ref=e7017]
+      - heading "CRDTs and Offline Conflict Resolution" [level=2] [ref=e7018]
+      - paragraph [ref=e7019]:
+        - text: CRDTs (Conflict-free Replicated Data Types) are data structures mathematically designed so that concurrent modifications from multiple sources can always be merged without conflicts and without coordination. The simplest is the
+        - strong [ref=e7020]: G-Set
+        - text: ": elements can only be added, never removed, so any two replicas merge with set union. A"
+        - strong [ref=e7021]: LWW-Register
+        - text: (Last-Write-Wins) keeps the value with the highest timestamp. For collaborative text editing,
+        - strong [ref=e7022]: Sequence CRDTs
+        - text: (as in Yjs and Automerge) give every character a unique identifier so concurrent insertions at the same position can be deterministically ordered without a server round-trip. Yjs is the standard library for collaborative web applications.
+      - document [ref=e7024]:
+        - generic [ref=e7027]:
+          - generic [ref=e7028]:
+            - generic [ref=e7035]: Sequence CRDT (Yjs)
+            - generic [ref=e7039]:
+              - paragraph [ref=e7046]: "User A inserts 'a' at position 2\\nID: (A, 1)"
+              - paragraph [ref=e7053]: "Both see: ...a b... or ...b a...\\ndeterministic tie-break by ID\\nSame result on all replicas"
+              - paragraph [ref=e7060]: "User B inserts 'b' at position 2\\nID: (B, 1)"
+          - generic [ref=e7061]:
+            - generic [ref=e7068]: LWW-Register
+            - generic [ref=e7072]:
+              - paragraph [ref=e7079]: "User A: value=hello timestamp=100"
+              - paragraph [ref=e7086]: "Result: world (higher timestamp wins)\\nDeterministic with no coordination"
+              - paragraph [ref=e7093]: "User B: value=world timestamp=150"
+          - generic [ref=e7094]:
+            - generic [ref=e7101]: G-Set CRDT (grow-only)
+            - generic [ref=e7105]:
+              - paragraph [ref=e7112]: "User A set: {apple, banana}"
+              - paragraph [ref=e7119]: "Merge = Union: {apple, banana, cherry}\\nAlways convergent no conflicts possible"
+              - paragraph [ref=e7126]: "User B set: {banana, cherry}"
+          - paragraph [ref=e7133]: "NOTE: CRDTs enable true peer-to-peer collaboration\\nwith no server arbitration required\\nFigma and Notion use sequence CRDTs internally"
+      - separator [ref=e7134]
+      - heading "AbortController, Streaming Fetch, and Memory Leaks" [level=2] [ref=e7135]
+      - paragraph [ref=e7136]:
+        - strong [ref=e7137]: AbortController
+        - text: is the standard cancellation mechanism for async operations. You pass its
+        - code [ref=e7138]: signal
+        - text: to
+        - code [ref=e7139]: fetch()
+        - text: ; calling
+        - code [ref=e7140]: abort()
+        - text: causes the fetch to reject with
+        - code [ref=e7141]: AbortError
+        - text: . The same signal can cancel multiple operations simultaneously. This is essential for preventing race conditions and for component cleanup on unmount.
+        - strong [ref=e7142]: Streaming fetch
+        - text: lets you process responses before they are fully received —
+        - code [ref=e7143]: response.body
+        - text: is a
+        - code [ref=e7144]: ReadableStream
+        - text: ". Read chunks with a reader as they arrive, perfect for streaming LLM responses. Browser memory leaks come from: event listeners not removed on unmount, closures capturing large objects, and"
+        - strong [ref=e7145]: detached DOM nodes
+        - text: — elements removed from the document but still referenced in JavaScript.
+      - document [ref=e7147]:
+        - generic [ref=e7149]:
+          - generic [ref=e7161]: done=false
+          - generic [ref=e7162]:
+            - generic [ref=e7163]:
+              - generic [ref=e7170]: Memory Leak Sources
+              - generic [ref=e7172]:
+                - paragraph [ref=e7179]: window.addEventListener in component\nno removeEventListener on unmount
+                - paragraph [ref=e7186]: Handler holds reference to component\ncomponent never GC'd
+                - paragraph [ref=e7193]: Remove element from DOM\nbut keep ref in JS object
+                - paragraph [ref=e7200]: Detached DOM node GC cannot collect
+                - paragraph [ref=e7207]: Closure captures large array or dataset\nclosure itself kept alive by timer or listener
+                - paragraph [ref=e7214]: Data never freed
+            - generic [ref=e7215]:
+              - generic [ref=e7222]: AbortController pattern
+              - generic [ref=e7226]:
+                - paragraph [ref=e7233]: const ctrl = new AbortController
+                - paragraph [ref=e7240]: ctrl.signal passed to fetch
+                - paragraph [ref=e7247]: fetch url signal=ctrl.signal
+                - paragraph [ref=e7254]: New search input arrives
+                - paragraph [ref=e7261]: ctrl.abort cancel in-flight request
+                - paragraph [ref=e7268]: fetch rejects with AbortError
+                - paragraph [ref=e7275]: Start new fetch with new controller
+            - paragraph [ref=e7282]: response.body.getReader
+            - paragraph [ref=e7289]: reader.read returns chunk
+            - paragraph [ref=e7296]: process chunk immediately\nrender partial response
+            - paragraph [ref=e7303]: "NOTE: Chrome DevTools Memory tab\\nshows Detached DOM nodes directly\\nTake heap snapshots before and after\\nto find what grew"
+      - separator [ref=e7308]
+      - heading "Accessibility Tree and ARIA Live Regions" [level=2] [ref=e7309]
+      - paragraph [ref=e7310]:
+        - text: Every DOM element has a corresponding node in the
+        - strong [ref=e7311]: accessibility tree
+        - text: — a parallel structure consumed by screen readers and assistive technology. The tree is built from semantic HTML and ARIA attributes. A
+        - code [ref=e7312]: div
+        - text: has no semantic role; a
+        - code [ref=e7313]: button
+        - text: element has
+        - code [ref=e7314]: role=button
+        - text: automatically. Screen readers announce roles, states (
+        - code [ref=e7315]: aria-expanded
+        - text: ","
+        - code [ref=e7316]: aria-disabled
+        - text: ), and labels (
+        - code [ref=e7317]: aria-label
+        - text: ","
+        - code [ref=e7318]: aria-labelledby
+        - text: ).
+        - strong [ref=e7319]: ARIA live regions
+        - text: tell screen readers to announce content changes automatically without the user focusing the element.
+        - code [ref=e7320]: aria-live="polite"
+        - text: waits until the user finishes their current activity.
+        - code [ref=e7321]: aria-live="assertive"
+        - text: interrupts immediately — reserve for critical urgent messages only. Misusing
+        - code [ref=e7322]: assertive
+        - text: floods the user with interruptions.
+      - document [ref=e7324]:
+        - generic [ref=e7326]:
+          - generic [ref=e7336]: browser builds
+          - generic [ref=e7337]:
+            - generic [ref=e7338]:
+              - generic [ref=e7345]: Accessibility Tree
+              - generic [ref=e7349]:
+                - paragraph [ref=e7356]: generic role no semantics for div
+                - paragraph [ref=e7363]: heading level 2
+                - paragraph [ref=e7370]: button role focusable, activatable
+                - paragraph [ref=e7377]: live region polite announces changes
+            - generic [ref=e7378]:
+              - generic [ref=e7385]: DOM Tree
+              - generic [ref=e7389]:
+                - paragraph [ref=e7396]: div class=card
+                - paragraph [ref=e7403]: h2 Product Name
+                - paragraph [ref=e7410]: button Add to Cart
+                - paragraph [ref=e7417]: div aria-live=polite status messages
+            - paragraph [ref=e7424]: "Toast notification: Order placed!"
+            - paragraph [ref=e7431]: Update aria-live div content
+            - paragraph [ref=e7438]: Screen reader announces automatically\nwithout user focusing element
+            - paragraph [ref=e7445]: "NOTE: Test with VoiceOver on macOS\\nNVDA on Windows or screen reader of choice\\nAXE browser extension checks common ARIA errors"
+      - separator [ref=e7446]
+      - heading "How to Render These Diagrams" [level=2] [ref=e7447]
+      - paragraph [ref=e7448]:
+        - text: Every diagram in this document is written in
+        - strong [ref=e7449]: Mermaid
+        - text: syntax. You can render them in several ways.
+      - paragraph [ref=e7450]:
+        - text: Paste any diagram block into
+        - link "mermaid.live" [ref=e7451] [cursor=pointer]:
+          - /url: https://mermaid.live
+        - text: for an instant interactive, editable render — no install required. GitHub and GitLab render Mermaid inside fenced code blocks marked with
+        - code [ref=e7452]: "```mermaid"
+        - text: natively, so this file will display diagrams automatically if you commit it to a repository. Notion and Confluence both support Mermaid as a built-in block type. VS Code users can install the
+        - strong [ref=e7453]: Mermaid Preview
+        - text: or
+        - strong [ref=e7454]: Markdown Preview Mermaid Support
+        - text: extension to see diagrams inline while editing.
+      - paragraph [ref=e7455]:
+        - text: For offline or CI use, the Mermaid CLI tool (
+        - code [ref=e7456]: mmdc
+        - text: ") converts diagrams to SVG or PNG: install with"
+        - code [ref=e7457]: npm install -g @mermaid-js/mermaid-cli
+        - text: and run
+        - code [ref=e7458]: mmdc -i diagram.mmd -o diagram.svg
+        - text: .
+      - paragraph [ref=e7459]:
+        - text: The three diagram types used in this document are
+        - code [ref=e7460]: flowchart
+        - text: (top-down
+        - code [ref=e7461]: TD
+        - text: and left-right
+        - code [ref=e7462]: LR
+        - text: variants for process flows and architecture),
+        - code [ref=e7463]: sequenceDiagram
+        - text: (for protocol and lifecycle interactions between participants), and
+        - code [ref=e7464]: stateDiagram-v2
+        - text: (for state machines like lock inflation and service worker lifecycle).
+      - separator [ref=e7465]
+      - paragraph [ref=e7466]:
+        - emphasis [ref=e7467]: Generated by Claude — Anthropic. Every concept explained from first principles.
+```

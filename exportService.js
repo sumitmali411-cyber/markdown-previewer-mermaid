@@ -542,31 +542,72 @@ export async function exportDOCX(element) {
     if (!window.docx) {
         throw new Error("DOCX export library is unavailable.");
     }
+    if (!element || !element.innerHTML.trim()) {
+        alert("Nothing to export. Load or type some markdown first.");
+        return;
+    }
 
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = window.docx;
     const paragraphs = [];
+    const headingMap = {
+        h1: HeadingLevel?.HEADING_1,
+        h2: HeadingLevel?.HEADING_2,
+        h3: HeadingLevel?.HEADING_3,
+    };
 
-    element.querySelectorAll("h1,h2,h3,p,li").forEach(node => {
-        const text = String(node.innerText || "").trim();
-        if (!text) {
-            return;
-        }
-
+    for (const node of element.children) {
         const tag = node.tagName.toLowerCase();
-        const paragraphConfig = {
-            children: [new TextRun(text)]
-        };
 
-        if (tag === "h1" && HeadingLevel?.HEADING_1) {
-            paragraphConfig.heading = HeadingLevel.HEADING_1;
-        } else if (tag === "h2" && HeadingLevel?.HEADING_2) {
-            paragraphConfig.heading = HeadingLevel.HEADING_2;
-        } else if (tag === "h3" && HeadingLevel?.HEADING_3) {
-            paragraphConfig.heading = HeadingLevel.HEADING_3;
+        // Mermaid diagrams → rasterize SVG and embed as PNG image
+        if (node.classList.contains("mermaid-diagram")) {
+            const svg = node.querySelector("svg");
+            if (svg) {
+                const size = inferSvgSize(svg, 500, 300);
+                try {
+                    const pngDataUri = await rasterizeSvgToPngDataUri(svg, size);
+                    const base64 = pngDataUri.split(",")[1];
+                    paragraphs.push(new Paragraph({
+                        children: [new ImageRun({
+                            type: "png",
+                            data: base64,
+                            transformation: { width: size.width, height: size.height }
+                        })]
+                    }));
+                } catch {
+                    // Skip diagram on rasterization failure
+                }
+            }
+            continue;
         }
 
-        paragraphs.push(new Paragraph(paragraphConfig));
-    });
+        // Headings
+        if (headingMap[tag] !== undefined) {
+            const text = (node.innerText || "").trim();
+            if (!text) continue;
+            paragraphs.push(new Paragraph({ heading: headingMap[tag], children: [new TextRun(text)] }));
+            continue;
+        }
+
+        // Paragraphs
+        if (tag === "p") {
+            const text = (node.innerText || "").trim();
+            if (text) paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+            continue;
+        }
+
+        // Lists (ul / ol)
+        if (tag === "ul" || tag === "ol") {
+            for (const li of node.querySelectorAll("li")) {
+                const text = (li.innerText || "").trim();
+                if (text) paragraphs.push(new Paragraph({ children: [new TextRun(`• ${text}`)] }));
+            }
+            continue;
+        }
+
+        // Fallback: extract any remaining text
+        const text = (node.innerText || "").trim();
+        if (text) paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+    }
 
     const doc = new Document({
         creator: "Markdown Previewer",
