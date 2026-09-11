@@ -2,12 +2,20 @@ let currentScript = null;
 let currentVersion = null;
 let loadPromise = null;
 
-function getMermaidUrl(version) {
-    if (!version || version === "latest") {
-        return "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js";
-    }
+// Only bare semver versions are accepted. The version is interpolated into a
+// script URL, so an unchecked value (a full URL, or one containing "/" or
+// "..") would load and execute code from an arbitrary location.
+const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
-    return `https://cdn.jsdelivr.net/npm/mermaid@${version}/dist/mermaid.min.js`;
+/** Pinned fallback: "latest" would silently adopt whatever the CDN serves. */
+const DEFAULT_MERMAID_VERSION = "11.2.0";
+
+function getMermaidUrl(version) {
+    const safeVersion = VERSION_PATTERN.test(version || "")
+        ? version
+        : DEFAULT_MERMAID_VERSION;
+
+    return `https://cdn.jsdelivr.net/npm/mermaid@${safeVersion}/dist/mermaid.min.js`;
 }
 
 export async function loadMermaid(version = "latest") {
@@ -40,6 +48,10 @@ export async function loadMermaid(version = "latest") {
 
             window.mermaid.initialize({
                 startOnLoad: false,
+                // Explicit rather than relying on the default: this app loads
+                // whichever mermaid version the user picks, and defaults have
+                // differed across versions. "strict" sanitizes diagram HTML.
+                securityLevel: "strict",
                 flowchart: {
                     htmlLabels: false,
                     useMaxWidth: true
@@ -82,7 +94,12 @@ export async function renderMermaid(container = document) {
             const { svg } = await window.mermaid.render(id, source);
             const wrapper = document.createElement("div");
             wrapper.className = "mermaid-diagram";
-            wrapper.innerHTML = svg;
+            // Mermaid sanitizes its own output at securityLevel "strict", but
+            // this is the one place diagram source reaches innerHTML, so do
+            // not depend on the loaded version getting that right.
+            wrapper.innerHTML = window.DOMPurify
+                ? window.DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } })
+                : svg;
             pre.replaceWith(wrapper);
         } catch (error) {
             const errorBlock = document.createElement("pre");
