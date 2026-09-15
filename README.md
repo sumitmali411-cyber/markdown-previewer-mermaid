@@ -69,3 +69,27 @@ File upload / textarea input
   → renderMermaid() — sequential SVG render per diagram block
   → processingIndicator hidden  ← export_pdf.py waits for this
 ```
+
+## Security notes
+
+- Markdown is sanitized with DOMPurify before it reaches the preview, and the
+  Mermaid SVG is sanitized again before injection.
+- Every CDN script is pinned to an exact version. Do not reintroduce
+  unversioned URLs such as `.../npm/marked/marked.min.js`: they resolve to
+  whatever the CDN currently serves, so the app silently adopts new code.
+- The Mermaid version comes from a dropdown but is validated against a semver
+  pattern before being interpolated into a script URL.
+
+### Recommended follow-up: Subresource Integrity
+
+The CDN `<script>` tags have no `integrity` attribute, so a compromise of
+jsDelivr (or a MITM) could serve modified code. Add SRI hashes with:
+
+```sh
+curl -s https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js \
+  | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+Then set `integrity="sha384-<hash>" crossorigin="anonymous"` on each tag.
+Note this cannot be done for Mermaid, which is loaded dynamically at a
+user-selected version.
